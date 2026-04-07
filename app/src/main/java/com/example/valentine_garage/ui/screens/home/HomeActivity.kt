@@ -1,4 +1,4 @@
-package com.example.valentine_garage
+package com.example.valentine_garage.ui.screens.home
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
