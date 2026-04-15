@@ -92,7 +92,7 @@ fun getBottomNavItems(role: UserRole): List<BottomNavBarDestinations> {
             Profile
         )
 
-        UserRole.VALENTINE -> listOf(
+        UserRole.MANAGER -> listOf(
             Home,
             Reports,
             History,
