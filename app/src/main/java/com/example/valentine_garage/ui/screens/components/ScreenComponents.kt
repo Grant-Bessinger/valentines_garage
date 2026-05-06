@@ -35,6 +35,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.valentine_garage.ui.theme.AccentPurple
+import com.example.valentine_garage.ui.theme.ErrorRed
+import com.example.valentine_garage.ui.theme.InfoBlue
+import com.example.valentine_garage.ui.theme.SuccessGreen
+import com.example.valentine_garage.ui.theme.WarningAmber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,7 +94,7 @@ fun RevenueTrendSection() {
                 months.forEachIndexed { i, (month, value) ->
                     val isCurrent     = i == months.lastIndex
                     val heightFraction = (value / maxVal)
-                    val barColor      = if (isCurrent) Color(0xFF4CAF50) else barBase.copy(alpha = 0.4f)
+                    val barColor      = if (isCurrent) SuccessGreen else barBase.copy(alpha = 0.4f)
 
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -116,7 +121,7 @@ fun RevenueTrendSection() {
 
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Box(Modifier.size(10.dp).background(Color(0xFF4CAF50), RoundedCornerShape(2.dp)))
+                Box(Modifier.size(10.dp).background(SuccessGreen, RoundedCornerShape(2.dp)))
                 Text("Current month", style = MaterialTheme.typography.labelSmall)
                 Spacer(Modifier.width(8.dp))
                 Box(Modifier.size(10.dp).background(barBase.copy(alpha = 0.4f), RoundedCornerShape(2.dp)))
@@ -131,10 +136,10 @@ fun RevenueTrendSection() {
 @Composable
 fun JobTypeBreakdownSection() {
     val types = listOf(
-        Triple("Engine & Mechanical", 10, Color(0xFF2196F3)),
-        Triple("Tyres & Brakes",       7, Color(0xFF4CAF50)),
-        Triple("Electrical",           4, Color(0xFFFFC107)),
-        Triple("Other / General",      3, Color(0xFF9C27B0)),
+        Triple("Engine & Mechanical", 10, InfoBlue),
+        Triple("Tyres & Brakes",       7, SuccessGreen),
+        Triple("Electrical",           4, WarningAmber),
+        Triple("Other / General",      3, AccentPurple),
     )
     val total = types.sumOf { it.second }.toFloat()
 
@@ -219,9 +224,9 @@ fun RecentActivitySection(navController: NavHostController) {
 
             mechanics.forEach { (name, jobs, efficiency) ->
                 val barColor = when {
-                    efficiency >= 0.9f -> Color(0xFF4CAF50)
-                    efficiency >= 0.8f -> Color(0xFFFFC107)
-                    else               -> Color(0xFFF44336)
+                    efficiency >= 0.9f -> SuccessGreen
+                    efficiency >= 0.8f -> WarningAmber
+                    else               -> ErrorRed
                 }
 
                 Row(

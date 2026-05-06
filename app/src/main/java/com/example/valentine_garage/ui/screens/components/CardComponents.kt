@@ -28,6 +28,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.valentine_garage.ui.theme.ErrorRed
+import com.example.valentine_garage.ui.theme.InfoBlue
+import com.example.valentine_garage.ui.theme.NeutralGrey
+import com.example.valentine_garage.ui.theme.SuccessGreen
+import com.example.valentine_garage.ui.theme.WarningAmber
 
 @Composable
 fun StatCard(
@@ -100,7 +105,7 @@ fun JobCard(
     invoiceAmount: String? = null,
     priority: String? = null
 ) {
-    val statusColor = if (isPending) Color(0xFFF44336) else Color(0xFF4CAF50)
+    val statusColor = if (isPending) ErrorRed else SuccessGreen
     val statusText  = if (isPending) "Pending" else "Done"
 
     Card(
@@ -137,9 +142,9 @@ fun JobCard(
                     if (priority != null) {
                         Spacer(Modifier.height(4.dp))
                         val pColor = when (priority) {
-                            "High"   -> Color(0xFFF44336)
-                            "Medium" -> Color(0xFFFFC107)
-                            else     -> Color(0xFF9E9E9E)
+                            "High"   -> ErrorRed
+                            "Medium" -> WarningAmber
+                            else     -> NeutralGrey
                         }
                         Surface(color = pColor.copy(alpha = 0.12f), shape = RoundedCornerShape(6.dp)) {
                             Text(
@@ -169,7 +174,7 @@ fun JobCard(
                         Text(date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     if (invoiceAmount != null) {
-                        Text(invoiceAmount, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF2196F3))
+                        Text(invoiceAmount, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = InfoBlue)
                     }
                 }
             }
@@ -200,7 +205,7 @@ fun PerformanceSummaryCard() {
                     Text("Total Revenue", style = MaterialTheme.typography.bodySmall)
                 }
                 Surface(
-                    color = Color(0xFF4CAF50).copy(alpha = 0.2f),
+                    color = SuccessGreen.copy(alpha = 0.2f),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Row(
@@ -211,10 +216,10 @@ fun PerformanceSummaryCard() {
                         Icon(
                             Icons.Default.TrendingUp,
                             contentDescription = null,
-                            tint = Color(0xFF4CAF50),
+                            tint = SuccessGreen,
                             modifier = Modifier.size(16.dp)
                         )
-                        Text("+12%", color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                        Text("+12%", color = SuccessGreen, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }

@@ -20,6 +20,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.valentine_garage.ui.theme.ErrorRed
+import com.example.valentine_garage.ui.theme.SuccessGreen
 
 @Composable
 fun PaymentsScreen() {
@@ -54,7 +56,7 @@ data class Payment(
 
 @Composable
 fun PaymentItem(payment: Payment) {
-    val statusColor = if (payment.isPaid) Color(0xFF4CAF50) else Color(0xFFF44336)
+    val statusColor = if (payment.isPaid) SuccessGreen else ErrorRed
     val statusText = if (payment.isPaid) "Paid" else "Unpaid"
 
     Card(

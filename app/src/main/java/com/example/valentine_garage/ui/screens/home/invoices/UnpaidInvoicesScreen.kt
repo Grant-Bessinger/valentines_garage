@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.valentine_garage.ui.theme.ErrorRed
 import com.example.valentine_garage.ui.screens.components.DetailScreen
 
 @Composable
@@ -31,7 +32,7 @@ fun UnpaidInvoicesScreen(navController: NavHostController) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFF44336).copy(alpha = 0.1f)
+                containerColor = ErrorRed.copy(alpha = 0.1f)
             )
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -40,7 +41,7 @@ fun UnpaidInvoicesScreen(navController: NavHostController) {
                     "N$ %.2f".format(total),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFF44336)
+                    color = ErrorRed
                 )
             }
         }
@@ -66,7 +67,7 @@ fun UnpaidInvoicesScreen(navController: NavHostController) {
                     }
                     Text(
                         "N$ %.2f".format(amount),
-                        color = Color(0xFFF44336),
+                        color = ErrorRed,
                         fontWeight = FontWeight.Bold
                     )
                 }

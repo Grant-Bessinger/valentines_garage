@@ -20,6 +20,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.valentine_garage.ui.theme.SuccessGreen
+import com.example.valentine_garage.ui.theme.WarningAmber
+import com.example.valentine_garage.ui.theme.InfoBlue
+import com.example.valentine_garage.ui.theme.ErrorRed
 import com.example.valentine_garage.ui.screens.components.StatCard
 import com.example.valentine_garage.ui.enums.UserRole
 import com.example.valentine_garage.ui.screens.components.JobTypeBreakdownSection
@@ -91,7 +95,7 @@ fun ManagerHomeContent(navController: NavHostController) {
             value    = "24",
             modifier = Modifier.weight(1f),
             icon     = Icons.Default.CheckCircle,
-            iconTint = Color(0xFF4CAF50),
+            iconTint = SuccessGreen,
             subtitle = "This month"
         ) { navController.navigate("completed_jobs") }
 
@@ -100,7 +104,7 @@ fun ManagerHomeContent(navController: NavHostController) {
             value    = "6",
             modifier = Modifier.weight(1f),
             icon     = Icons.Default.HourglassEmpty,
-            iconTint = Color(0xFFFFC107),
+            iconTint = WarningAmber,
             subtitle = "In progress"
         ) { navController.navigate("pending_jobs") }
     }
@@ -113,7 +117,7 @@ fun ManagerHomeContent(navController: NavHostController) {
             value    = "N$ 18,450",
             modifier = Modifier.weight(1f),
             icon     = Icons.Default.TrendingUp,
-            iconTint = Color(0xFF2196F3),
+            iconTint = InfoBlue,
             subtitle = "+12% vs last month"
         ) { navController.navigate("revenue_details") }
 
@@ -122,7 +126,7 @@ fun ManagerHomeContent(navController: NavHostController) {
             value    = "N$ 3,200",
             modifier = Modifier.weight(1f),
             icon     = Icons.Default.Warning,
-            iconTint = Color(0xFFF44336),
+            iconTint = ErrorRed,
             subtitle = "2 invoices"
         ) { navController.navigate("unpaid_invoices") }
     }

@@ -28,6 +28,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.valentine_garage.ui.theme.AccentPurple
+import com.example.valentine_garage.ui.theme.InfoBlue
+import com.example.valentine_garage.ui.theme.SuccessGreen
 import com.example.valentine_garage.ui.screens.components.DetailScreen
 import com.example.valentine_garage.ui.screens.components.JobCard
 import com.example.valentine_garage.ui.screens.components.SummaryTile
@@ -69,9 +72,9 @@ fun CompletedJobsScreen(navController: NavHostController) {
 
         // ── Summary cards
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            SummaryTile(Icons.Default.CheckCircle,      "${filtered.size}",          "Jobs",         Color(0xFF4CAF50), Modifier.weight(1f))
-            SummaryTile(Icons.Default.MonetizationOn,   "N$ ${(totalRevenue/1000).toInt()}k", "Revenue", Color(0xFF2196F3), Modifier.weight(1f))
-            SummaryTile(Icons.Default.WorkHistory,      "N$ ${(avgJobValue/1000).toInt()}k",  "Avg Value", Color(0xFF9C27B0), Modifier.weight(1f))
+            SummaryTile(Icons.Default.CheckCircle,      "${filtered.size}",          "Jobs",         SuccessGreen, Modifier.weight(1f))
+            SummaryTile(Icons.Default.MonetizationOn,   "N$ ${(totalRevenue/1000).toInt()}k", "Revenue", InfoBlue, Modifier.weight(1f))
+            SummaryTile(Icons.Default.WorkHistory,      "N$ ${(avgJobValue/1000).toInt()}k",  "Avg Value", AccentPurple, Modifier.weight(1f))
         }
 
         Spacer(Modifier.height(16.dp))
