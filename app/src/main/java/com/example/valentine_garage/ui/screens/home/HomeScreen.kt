@@ -1,7 +1,10 @@
 package com.example.valentine_garage.ui.screens.home
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,12 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.example.valentine_garage.ui.screens.components.StatCard
 import com.example.valentine_garage.ui.enums.UserRole
 
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavHostController) {
 
     Column(
         modifier = Modifier
@@ -41,7 +45,7 @@ fun HomeScreen() {
 
             UserRole.MECHANIC -> MechanicHomeContent()
 
-            UserRole.MANAGER -> ManagerHomeContent()
+            UserRole.MANAGER -> ManagerHomeContent(navController)
         }
     }
 }
@@ -61,21 +65,45 @@ fun MechanicHomeContent() {
 }
 
 @Composable
-fun ManagerHomeContent() {
+fun ManagerHomeContent(navController: NavHostController) {
 
-    Text("Financial Overview")
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
 
-    Spacer(modifier = Modifier.padding(8.dp))
+        StatCard(
+            "Completed Jobs",
+            "24",
+            Modifier.weight(1f)
+        ) {
+            navController.navigate("completed_jobs")
+        }
 
-    StatCard("Completed Jobs", "24")
-    StatCard("Revenue", "N$ 18,450")
-    StatCard("Unpaid Invoices", "6")
+        StatCard(
+            "Pending Jobs",
+            "6",
+            Modifier.weight(1f)
+        ) {
+            navController.navigate("pending_jobs")
+        }
+    }
 
-    Spacer(modifier = Modifier.padding(12.dp))
+    Spacer(Modifier.height(12.dp))
 
-    Text("Quick Access")
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
 
-    Text("• View Reports")
-    Text("• Generate Invoices")
-    Text("• Track Payments")
+        StatCard(
+            "Revenue",
+            "N$ 18,450",
+            Modifier.weight(1f)
+        ) {
+            navController.navigate("revenue_details")
+        }
+
+        StatCard(
+            "Unpaid",
+            "N$ 3,200",
+            Modifier.weight(1f)
+        ) {
+            navController.navigate("unpaid_invoices")
+        }
+    }
 }
