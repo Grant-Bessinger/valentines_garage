@@ -151,5 +151,5 @@ fun ManagerHomeContent(navController: NavHostController) {
     // 6. Mechanic performance
     MechanicPerformanceSection()
 
-    Spacer(Modifier.height(120.dp))
+
 }

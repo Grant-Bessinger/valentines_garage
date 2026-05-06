@@ -136,7 +136,7 @@ fun ValentineGarageApp() {
             NavHost(
                 navController = navController,
                 startDestination = Home.route,
-                modifier = Modifier.consumeWindowInsets(innerPadding)
+                modifier = Modifier.padding(innerPadding)
             ) {
 
                 // ── Bottom nav screens ──────────────────────────────
