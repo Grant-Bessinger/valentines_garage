@@ -30,6 +30,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.valentine_garage.ui.enums.UserRole
+import dagger.hilt.android.AndroidEntryPoint
 import com.example.valentine_garage.ui.screens.CheckIn
 import com.example.valentine_garage.ui.screens.CompletedJobs
 import com.example.valentine_garage.ui.screens.Drafts
@@ -59,6 +60,7 @@ import com.example.valentine_garage.ui.screens.home.reports.PendingJobsScreen
 import com.example.valentine_garage.ui.screens.home.reports.ReportsScreen
 import com.example.valentine_garage.ui.theme.ValentineGarageTheme
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

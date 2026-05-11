@@ -2,9 +2,13 @@ package com.example.valentine_garage.ui.repositories
 
 import com.example.valentine_garage.database.dao.TruckDao
 import com.example.valentine_garage.database.entities.TruckEntity
+import com.example.valentine_garage.service.ManagerService
 import javax.inject.Inject
 
-class TruckRepository @Inject constructor(private val truckDao: TruckDao) {
+class TruckRepository @Inject constructor(
+    private val truckDao: TruckDao,
+    private val managerService: ManagerService
+) {
 
     suspend fun insertTruck(truck: TruckEntity) = truckDao.insertTruck(truck)
 

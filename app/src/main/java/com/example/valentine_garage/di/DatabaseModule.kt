@@ -2,7 +2,7 @@ package com.example.valentine_garage.di
 
 import android.app.Application
 import androidx.room.Room
-import com.example.valentine_garage.database.dao.TruckDao
+import com.example.valentine_garage.database.dao.*
 import com.example.valentine_garage.database.roomDatabase.AppDatabase
 import dagger.Module
 import dagger.Provides
@@ -20,12 +20,27 @@ object DatabaseModule {
         return Room.databaseBuilder(
             app,
             AppDatabase::class.java,
-            "valentineGarageApplication"
-        ).build()
+            "valentine_garage_db"
+        )
+            .fallbackToDestructiveMigration(false)
+        .build()
     }
 
     @Provides
-    fun provideTruckDao(db: AppDatabase): TruckDao {
-        return db.truckDao()
-    }
+    fun provideTruckDao(db: AppDatabase): TruckDao = db.truckDao()
+
+    @Provides
+    fun provideUserDao(db: AppDatabase): UserDao = db.userDao()
+
+    @Provides
+    fun provideClientDao(db: AppDatabase): ClientDao = db.clientDao()
+
+    @Provides
+    fun provideVehicleDao(db: AppDatabase): VehicleDao = db.vehicleDao()
+
+    @Provides
+    fun provideJobDao(db: AppDatabase): JobDao = db.jobDao()
+
+    @Provides
+    fun provideInvoiceDao(db: AppDatabase): InvoiceDao = db.invoiceDao()
 }

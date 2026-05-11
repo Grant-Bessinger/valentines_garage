@@ -1,25 +1,31 @@
 package com.example.valentine_garage.database.roomDatabase
 
-import android.content.Context
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.valentine_garage.database.dao.TruckDao
+import com.example.valentine_garage.database.dao.*
 import com.example.valentine_garage.database.dbUtil.Converters
-import com.example.valentine_garage.database.entities.TruckEntity
-
+import com.example.valentine_garage.database.entities.*
 
 @Database(
     entities = [
-        TruckEntity::class
+        UserEntity::class,
+        ClientEntity::class,
+        VehicleEntity::class,
+        JobEntity::class,
+        InvoiceEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun truckDao(): TruckDao
+    abstract fun userDao(): UserDao
+    abstract fun clientDao(): ClientDao
+    abstract fun vehicleDao(): VehicleDao
+    abstract fun jobDao(): JobDao
+    abstract fun invoiceDao(): InvoiceDao
 
 }
