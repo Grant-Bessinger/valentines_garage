@@ -12,13 +12,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Valentine_garage">
+
         <activity
-            android:name=".ui.screens.authentication.AuthActivity"
-            android:exported="false"
-            android:label="@string/title_activity_auth"
-            android:theme="@style/Theme.Valentine_garage" />
-        <activity
-            android:name=".ui.screens.home.MainActivity"
+            android:name=".ui.screens.SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.Valentine_garage">
             <intent-filter>
@@ -27,6 +23,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.screens.authentication.AuthActivity"
+            android:exported="true"
+            android:label="@string/title_activity_auth"
+            android:theme="@style/Theme.Valentine_garage"/>
+        <activity
+            android:name=".ui.screens.home.HomeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Valentine_garage" />
     </application>
 
 </manifest>

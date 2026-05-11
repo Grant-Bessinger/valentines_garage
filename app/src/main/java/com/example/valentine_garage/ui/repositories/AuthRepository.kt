@@ -6,12 +6,16 @@ import com.example.valentine_garage.dto.UserDto
 import com.example.valentine_garage.service.AuthService
 import com.example.valentine_garage.service.helper.FirebaseResult
 import com.example.valentine_garage.ui.helper.AuthState
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
 class AuthRepository @Inject constructor(
     private val authService: AuthService,
@@ -46,14 +50,15 @@ class AuthRepository @Inject constructor(
         role: String
     ): FirebaseResult<UserDto> = authService.createUser(email, password, displayName, role)
 
-
-    suspend fun seedDefaultUsers() = authService.seedDefaultUsers()
-
     // --- Local User Data Methods (from former UserRepository) ---
 
     suspend fun insertUserLocal(userDto: UserDto) {
         userDao.insertUser(UserEntity.fromDto(userDto))
     }
+
+     fun getUser(): Flow<UserDto?> {
+         return userDao.getUser().map { it?.toDto() }
+     }
 
     suspend fun getUserByIdLocal(uid: String): UserDto? {
         return userDao.getUserById(uid)?.toDto()

@@ -12,10 +12,11 @@ import com.example.valentine_garage.database.entities.*
         UserEntity::class,
         ClientEntity::class,
         VehicleEntity::class,
+        TruckEntity::class,
         JobEntity::class,
         InvoiceEntity::class
     ],
-    version = 2,
+    version = 1,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -17,12 +17,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.valentine_garage.dto.InvoiceDto
+import com.example.valentine_garage.ui.viewModels.InvoiceViewModel
+import java.util.UUID
 
 @Composable
-fun InvoiceScreen() {
+fun InvoiceScreen(viewModel: InvoiceViewModel = hiltViewModel()) {
+    var jobId by remember { mutableStateOf("") }
     var labour by remember { mutableStateOf("") }
     var parts by remember { mutableStateOf("") }
 
@@ -38,6 +41,15 @@ fun InvoiceScreen() {
         Text("Generate Invoice", style = MaterialTheme.typography.headlineMedium)
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = jobId,
+            onValueChange = { jobId = it },
+            label = { Text("Job ID") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = labour,
@@ -65,7 +77,17 @@ fun InvoiceScreen() {
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(
-            onClick = { /* Save invoice */ },
+            onClick = {
+                val invoice = InvoiceDto(
+                    id = UUID.randomUUID().toString(),
+                    jobId = jobId,
+                    labourCost = labour.toDoubleOrNull() ?: 0.0,
+                    partsCost = parts.toDoubleOrNull() ?: 0.0,
+                    totalCost = total,
+                    createdAt = System.currentTimeMillis()
+                )
+                viewModel.addInvoice(invoice)
+            },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Generate Invoice")

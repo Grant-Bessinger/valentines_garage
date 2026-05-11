@@ -1,6 +1,7 @@
 package com.example.valentine_garage.ui.screens.home.payments
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,57 +10,78 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.valentine_garage.service.helper.FirebaseResult
 import com.example.valentine_garage.ui.screens.components.DetailScreen
+import com.example.valentine_garage.ui.viewModels.InvoiceViewModel
 
 @Composable
-fun RevenueDetailsScreen(navController: NavHostController) {
-    val entries = listOf(
-        Pair("Toyota Corolla - INV001", 3200.0),
-        Pair("Ford Ranger - INV002", 5800.0),
-        Pair("VW Polo - INV003", 2450.0),
-        Pair("Honda Fit - INV004", 7000.0),
-    )
-    val total = entries.sumOf { it.second }
+fun RevenueDetailsScreen(
+    navController: NavHostController,
+    viewModel: InvoiceViewModel = hiltViewModel()
+) {
+    LaunchedEffect(Unit) {
+        viewModel.fetchRemoteInvoices()
+    }
+
+    val remoteInvoicesResult by viewModel.remoteInvoices.collectAsState()
+
+    val invoices = when (val result = remoteInvoicesResult) {
+        is FirebaseResult.Success -> result.data
+        else -> emptyList()
+    }
+    val total = invoices.sumOf { it.totalCost }
 
     DetailScreen(title = "Revenue Details", navController = navController) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Total Revenue", style = MaterialTheme.typography.labelMedium)
-                Text(
-                    "N$ %.2f".format(total),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
+        if (remoteInvoicesResult is FirebaseResult.Loading) {
+            Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        entries.forEach { (label, amount) ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+        } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
-                Text(label, style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    "N$ %.2f".format(amount),
-                    fontWeight = FontWeight.SemiBold
-                )
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Total Revenue", style = MaterialTheme.typography.labelMedium)
+                    Text(
+                        "N$ %.2f".format(total),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
-            HorizontalDivider()
+
+            Spacer(Modifier.height(16.dp))
+
+            invoices.forEach { invoice ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Invoice: ${invoice.id}", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        "N$ %.2f".format(invoice.totalCost),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                HorizontalDivider()
+            }
         }
     }
 }

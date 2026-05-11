@@ -12,21 +12,25 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.valentine_garage.ui.theme.ErrorRed
 import com.example.valentine_garage.ui.screens.components.DetailScreen
+import com.example.valentine_garage.ui.viewModels.InvoiceViewModel
 
 @Composable
-fun UnpaidInvoicesScreen(navController: NavHostController) {
-    val unpaid = listOf(
-        Triple("INV002", "Ford Ranger", 2300.0),
-        Triple("INV005", "Mazda CX-5", 900.0),
-    )
-    val total = unpaid.sumOf { it.third }
+fun UnpaidInvoicesScreen(
+    navController: NavHostController,
+    viewModel: InvoiceViewModel = hiltViewModel()
+) {
+    val unpaid by viewModel.unpaidInvoices.collectAsState()
+    val total = unpaid.sumOf { it.totalCost }
 
     DetailScreen(title = "Unpaid Invoices", navController = navController) {
         Card(
@@ -48,7 +52,7 @@ fun UnpaidInvoicesScreen(navController: NavHostController) {
 
         Spacer(Modifier.height(16.dp))
 
-        unpaid.forEach { (invoiceId, vehicle, amount) ->
+        unpaid.forEach { invoice ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -62,11 +66,11 @@ fun UnpaidInvoicesScreen(navController: NavHostController) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
-                        Text(invoiceId, fontWeight = FontWeight.Bold)
-                        Text(vehicle, style = MaterialTheme.typography.bodySmall)
+                        Text(invoice.id, fontWeight = FontWeight.Bold)
+                        Text("Job: ${invoice.jobId}", style = MaterialTheme.typography.bodySmall)
                     }
                     Text(
-                        "N$ %.2f".format(amount),
+                        "N$ %.2f".format(invoice.totalCost),
                         color = ErrorRed,
                         fontWeight = FontWeight.Bold
                     )

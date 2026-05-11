@@ -42,7 +42,7 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Workshop System",
+            text = "Valentine Garage",
             style = MaterialTheme.typography.headlineMedium
         )
 

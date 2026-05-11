@@ -106,30 +106,7 @@ class AuthService @Inject constructor(
             FirebaseResult.Failure(e)
         }
     }
-    suspend fun seedDefaultUsers() {
-        val defaults = listOf(
-            Triple("admin@valentine.com", "Admin@123", UserRole.ADMIN),
-            Triple("mechanic@valentine.com", "Mechanic@123", UserRole.MECHANIC),
-            Triple("manager@valentine.com", "Manager@123", UserRole.MANAGER)
-        )
 
-        for ((email, pass, role) in defaults) {
-            try {
-                auth.createUserWithEmailAndPassword(email, pass).await().user?.uid?.let { uid ->
-                    val user = UserDto(
-                        uid = uid,
-                        email = email,
-                        displayName = role.name.lowercase().replaceFirstChar { it.uppercase() },
-                        role = role.name,
-                        active = true
-                    )
-                    firestore.collection(USERS_COLLECTION).document(uid).set(user).await()
-                }
-            } catch (e: Exception) {
-                  FirebaseResult.Failure(e)
-            }
-        }
-    }
 
     fun isLoggedIn(): Boolean = auth.currentUser != null
 

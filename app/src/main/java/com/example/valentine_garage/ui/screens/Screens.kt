@@ -3,6 +3,7 @@ package com.example.valentine_garage.ui.screens
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.valentine_garage.dto.UserDto
 import com.example.valentine_garage.ui.enums.UserRole
 
 interface Screens {
@@ -106,8 +107,19 @@ data class RoleNavConfig(
     val overflowItems: List<Screens> = emptyList()
 )
 
-fun getNavConfig(role: UserRole): RoleNavConfig {
-    return when (role) {
+fun getNavConfig(user: UserDto): RoleNavConfig? {
+
+    var userRole: UserRole? = null
+
+    if (user.role.contains(UserRole.MECHANIC.name)){
+        userRole = UserRole.MECHANIC
+    } else if (user.role.contains(UserRole.ADMIN.name)){
+        userRole = UserRole.ADMIN
+    }else if (user.role.contains(UserRole.MANAGER.name)){
+        userRole = UserRole.MANAGER
+    }
+
+    return when (userRole) {
         UserRole.ADMIN -> RoleNavConfig(
             primaryItems = listOf(Home, CheckIn, Drafts, History, Profile)
         )
@@ -118,5 +130,7 @@ fun getNavConfig(role: UserRole): RoleNavConfig {
             primaryItems = listOf(Home, Reports, History, Profile),
             overflowItems = listOf(Invoices, Payments)  // moved to "More"
         )
+
+        else -> null
     }
 }

@@ -24,6 +24,8 @@ class AuthViewModel @Inject constructor(
     private val _loginState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val loginState: StateFlow<LoginUiState> = _loginState.asStateFlow()
 
+
+
     val authState: StateFlow<AuthState> = MutableStateFlow<AuthState>(AuthState.Loading).also { flow ->
         viewModelScope.launch {
             repo.authState.collect { state ->
@@ -31,6 +33,7 @@ class AuthViewModel @Inject constructor(
             }
         }
     }.asStateFlow()
+
 
     val allUsers: StateFlow<List<UserDto>> = repo.getAllUsersLocal()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -56,13 +59,10 @@ class AuthViewModel @Inject constructor(
     }
 
 
+
     fun logout() {
         repo.logout()
         _loginState.value = LoginUiState.Idle
-    }
-
-    fun seedUsers() {
-        viewModelScope.launch { repo.seedDefaultUsers() }
     }
 
     fun resetLoginState() {
@@ -76,6 +76,9 @@ class AuthViewModel @Inject constructor(
             repo.insertUserLocal(user)
         }
     }
+
+    val currentUser = repo.getUser().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
 
     fun deleteUser(user: UserDto) {
         viewModelScope.launch {

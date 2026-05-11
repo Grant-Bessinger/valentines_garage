@@ -20,6 +20,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.valentine_garage.dto.UserDto
 import com.example.valentine_garage.ui.theme.SuccessGreen
 import com.example.valentine_garage.ui.theme.WarningAmber
 import com.example.valentine_garage.ui.theme.InfoBlue
@@ -34,7 +35,17 @@ import com.example.valentine_garage.ui.screens.components.RevenueTrendSection
 
 
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(navController: NavHostController, user: UserDto) {
+
+    var userRole: UserRole? = null
+
+    if (user.role.contains(UserRole.MECHANIC.name)){
+        userRole = UserRole.MECHANIC
+    } else if (user.role.contains(UserRole.ADMIN.name)){
+        userRole = UserRole.ADMIN
+    }else if (user.role.contains(UserRole.MANAGER.name)){
+        userRole = UserRole.MANAGER
+    }
 
     Column(
         modifier = Modifier
@@ -43,22 +54,26 @@ fun HomeScreen(navController: NavHostController) {
             .semantics { contentDescription = "Home" }
     ) {
 
-        Text(
-            text = when (UserRole.MANAGER) {
-                UserRole.ADMIN -> "Admin Home"
-                UserRole.MECHANIC -> "Mechanic Home"
-                UserRole.MANAGER -> "Manager Home"
-            },
-            style = MaterialTheme.typography.headlineMedium
-        )
+        when (userRole) {
+            UserRole.ADMIN -> "Admin Home"
+            UserRole.MECHANIC -> "Mechanic Home"
+            UserRole.MANAGER -> "Manager Home"
+            else -> null
+        }?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
 
-        when (UserRole.MANAGER) {
+        when (userRole) {
 
             UserRole.ADMIN -> AdminHomeContent()
 
             UserRole.MECHANIC -> MechanicHomeContent()
 
             UserRole.MANAGER -> ManagerHomeContent(navController)
+            else -> null
         }
     }
 }
