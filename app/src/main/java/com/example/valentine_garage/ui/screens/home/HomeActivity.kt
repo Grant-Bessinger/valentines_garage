@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -78,89 +79,86 @@ fun ValentineGarageApp(authViewModel: AuthViewModel = hiltViewModel()) {
         val currentDestination = currentBackStack?.destination
 
         val currentUser by authViewModel.currentUser.collectAsState()
-        currentUser?.let { currentuser ->
-            val user = currentuser
+        currentUser?.let { user ->
             val navConfig = getNavConfig(user)
-            navConfig?.let { navConfig ->
-                val bottomBarRoutes = (navConfig.primaryItems + navConfig.overflowItems)
-                    .map { it.route }
-                    .toSet()
-                val showBottomBar = currentDestination?.route in bottomBarRoutes
+            val bottomBarRoutes = (navConfig.primaryItems + navConfig.overflowItems)
+                .map { it.route }
+                .toSet()
+            val showBottomBar = currentDestination?.route in bottomBarRoutes
 
-                var showOverflowSheet by remember { mutableStateOf(false) }
+            var showOverflowSheet by remember { mutableStateOf(false) }
 
-                if (showOverflowSheet && navConfig.overflowItems.isNotEmpty()) {
-                    OverflowBottomSheet(
-                        items = navConfig.overflowItems,
-                        onItemSelected = { navController.navigateSingleTopTo(it.route) },
-                        onDismiss = { showOverflowSheet = false }
-                    )
-                }
+            if (showOverflowSheet && navConfig.overflowItems.isNotEmpty()) {
+                OverflowBottomSheet(
+                    items = navConfig.overflowItems,
+                    onItemSelected = { navController.navigateSingleTopTo(it.route) },
+                    onDismiss = { showOverflowSheet = false }
+                )
+            }
 
-                Scaffold(
-                    contentWindowInsets = WindowInsets.systemBars,
-                    bottomBar = {
-                        if (showBottomBar) {
-                            NavigationBar {
-                                navConfig.primaryItems.forEach { screen ->
-                                    NavigationBarItem(
-                                        icon = {
-                                            screen.icon?.let {
-                                                Icon(
-                                                    it,
-                                                    contentDescription = screen.route
-                                                )
-                                            }
-                                        },
-                                        label = { Text(screen.route.uppercase()) },
-                                        selected = currentDestination?.route == screen.route,
-                                        alwaysShowLabel = false, // replicates your expanding tab behavior
-                                        onClick = { navController.navigateSingleTopTo(screen.route) }
-                                    )
-                                }
-
-                                if (navConfig.overflowItems.isNotEmpty()) {
-                                    NavigationBarItem(
-                                        icon = {
+            Scaffold(
+                contentWindowInsets = WindowInsets.systemBars,
+                bottomBar = {
+                    if (showBottomBar) {
+                        NavigationBar {
+                            navConfig.primaryItems.forEach { screen ->
+                                NavigationBarItem(
+                                    icon = {
+                                        screen.icon?.let {
                                             Icon(
-                                                Icons.Default.MoreVert,
-                                                contentDescription = "More"
+                                                it,
+                                                contentDescription = screen.route
                                             )
-                                        },
-                                        label = { Text("More") },
-                                        selected = false,
-                                        alwaysShowLabel = false,
-                                        onClick = { showOverflowSheet = true }
-                                    )
-                                }
+                                        }
+                                    },
+                                    label = { Text(screen.route.replaceFirstChar { it.uppercase() }) },
+                                    selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                                    alwaysShowLabel = false,
+                                    onClick = { navController.navigateSingleTopTo(screen.route) }
+                                )
+                            }
+
+                            if (navConfig.overflowItems.isNotEmpty()) {
+                                NavigationBarItem(
+                                    icon = {
+                                        Icon(
+                                            Icons.Default.MoreVert,
+                                            contentDescription = "More"
+                                        )
+                                    },
+                                    label = { Text("More") },
+                                    selected = false,
+                                    alwaysShowLabel = false,
+                                    onClick = { showOverflowSheet = true }
+                                )
                             }
                         }
                     }
-                ) { innerPadding ->
-                    NavHost(
-                        navController = navController,
-                        startDestination = Home.route,
-                        modifier = Modifier.padding(innerPadding)
-                    ) {
+                }
+            ) { innerPadding ->
+                NavHost(
+                    navController = navController,
+                    startDestination = Home.route,
+                    modifier = Modifier.padding(innerPadding)
+                ) {
 
-                        // ── Bottom nav screens ──────────────────────────────
-                        composable(Home.route) { HomeScreen(navController, user) }
-                        composable(Profile.route) { ProfileScreen() }
-                        composable(History.route) { HistoryScreen() }
-                        composable(CheckIn.route) { CheckInScreen() }
-                        composable(Drafts.route) { DraftsScreen() }
-                        composable(Repairs.route) { RepairsScreen() }
-                        composable(Reports.route) { ReportsScreen() }
-                        composable(Invoices.route) { InvoiceScreen() }
-                        composable(Payments.route) { PaymentsScreen() }
+                    // ── Bottom nav screens ──────────────────────────────
+                    composable(Home.route) { HomeScreen(navController, user) }
+                    composable(Profile.route) { ProfileScreen() }
+                    composable(History.route) { HistoryScreen() }
+                    composable(CheckIn.route) { CheckInScreen() }
+                    composable(Drafts.route) { DraftsScreen() }
+                    composable(Repairs.route) { RepairsScreen() }
+                    composable(Reports.route) { ReportsScreen() }
+                    composable(Invoices.route) { InvoiceScreen() }
+                    composable(Payments.route) { PaymentsScreen() }
 
-                        // ── Detail screens (no bottom bar) ──────────────────
-                        composable(CompletedJobs.route) { CompletedJobsScreen(navController) }
-                        composable(PendingJobs.route) { PendingJobsScreen(navController) }
-                        composable(RevenueDetails.route) { RevenueDetailsScreen(navController) }
-                        composable(UnpaidInvoices.route) { UnpaidInvoicesScreen(navController) }
+                    // ── Detail screens (no bottom bar) ──────────────────
+                    composable(CompletedJobs.route) { CompletedJobsScreen(navController) }
+                    composable(PendingJobs.route) { PendingJobsScreen(navController) }
+                    composable(RevenueDetails.route) { RevenueDetailsScreen(navController) }
+                    composable(UnpaidInvoices.route) { UnpaidInvoicesScreen(navController) }
 
-                    }
                 }
             }
         }
@@ -170,8 +168,8 @@ fun ValentineGarageApp(authViewModel: AuthViewModel = hiltViewModel()) {
 
 fun NavHostController.navigateSingleTopTo(route: String) = this.navigate(route) {
     popUpTo(this@navigateSingleTopTo.graph.findStartDestination().id) {
-    saveState = true
-}
+        saveState = true
+    }
     launchSingleTop = true
     restoreState = true
 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -86,11 +87,11 @@ fun HomeScreen(
 
         when (userRole) {
 
-            UserRole.ADMIN -> AdminHomeContent(navController, clientViewModel, vehicleViewModel, jobViewModel)
+            UserRole.ADMIN -> AdminHomeContent(navController, clientViewModel, vehicleViewModel, jobViewModel, user)
 
-            UserRole.MECHANIC -> MechanicHomeContent(navController, jobViewModel, user.uid)
+            UserRole.MECHANIC -> MechanicHomeContent(navController, jobViewModel, user)
 
-            UserRole.MANAGER -> ManagerHomeContent(navController, jobViewModel, invoiceViewModel)
+            UserRole.MANAGER -> ManagerHomeContent(navController, jobViewModel, invoiceViewModel, user)
             else -> null
         }
     }
@@ -101,7 +102,8 @@ fun AdminHomeContent(
     navController: NavHostController,
     clientViewModel: ClientViewModel,
     vehicleViewModel: VehicleViewModel,
-    jobViewModel: JobViewModel
+    jobViewModel: JobViewModel,
+    user: UserDto
 ) {
     val allClients by clientViewModel.allClients.collectAsState()
     val allVehicles by vehicleViewModel.allVehicles.collectAsState()
@@ -113,8 +115,12 @@ fun AdminHomeContent(
         jobViewModel.fetchRemoteJobs()
     }
 
-    Text("Overview", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-    Spacer(Modifier.height(8.dp))
+    Text(
+        text = "Welcome, ${user.displayName.ifBlank { "Admin" }}",
+        style = MaterialTheme.typography.headlineSmall,
+        fontWeight = FontWeight.Bold
+    )
+    Spacer(Modifier.height(16.dp))
 
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         StatCard(
@@ -160,8 +166,9 @@ fun AdminHomeContent(
 fun MechanicHomeContent(
     navController: NavHostController,
     jobViewModel: JobViewModel,
-    mechanicId: String
+    user: UserDto
 ) {
+    val mechanicId = user.uid
     val myJobs by jobViewModel.getJobsByMechanic(mechanicId).collectAsState()
 
     LaunchedEffect(mechanicId) {
@@ -172,8 +179,12 @@ fun MechanicHomeContent(
     val inProgressJobs = myJobs.count { it.status == JobStatus.IN_PROGRESS.name }
     val completedJobs = myJobs.count { it.status == JobStatus.COMPLETED.name }
 
-    Text("My Tasks", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-    Spacer(Modifier.height(8.dp))
+    Text(
+        text = "Welcome, ${user.displayName.ifBlank { "Mechanic" }}",
+        style = MaterialTheme.typography.headlineSmall,
+        fontWeight = FontWeight.Bold
+    )
+    Spacer(Modifier.height(16.dp))
 
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         StatCard(
@@ -182,7 +193,7 @@ fun MechanicHomeContent(
             modifier = Modifier.weight(1f),
             icon     = Icons.AutoMirrored.Filled.Assignment,
             iconTint = InfoBlue
-        ) { navController.navigate("repairs") }
+        ) { navController.navigateSingleTopTo("repairs") }
 
         StatCard(
             title    = "In Progress",
@@ -190,7 +201,7 @@ fun MechanicHomeContent(
             modifier = Modifier.weight(1f),
             icon     = Icons.Default.Build,
             iconTint = WarningAmber
-        ) { navController.navigate("repairs") }
+        ) { navController.navigateSingleTopTo("repairs") }
     }
 
     Spacer(Modifier.height(12.dp))
@@ -202,7 +213,7 @@ fun MechanicHomeContent(
             modifier = Modifier.weight(1f),
             icon     = Icons.Default.CheckCircle,
             iconTint = SuccessGreen
-        ) { navController.navigate("history") }
+        ) { navController.navigateSingleTopTo("history") }
 
         Spacer(Modifier.weight(1f))
     }
@@ -218,7 +229,8 @@ fun MechanicHomeContent(
 fun ManagerHomeContent(
     navController: NavHostController,
     jobViewModel: JobViewModel,
-    invoiceViewModel: InvoiceViewModel
+    invoiceViewModel: InvoiceViewModel,
+    user: UserDto
 ) {
 
     val allJobs by jobViewModel.allJobs.collectAsState()
@@ -270,7 +282,14 @@ fun ManagerHomeContent(
         )
     } ?: emptyList()
 
-    // 1. Performance summary banner
+    Text(
+        text = "Welcome, ${user.displayName.ifBlank { "Manager" }}",
+        style = MaterialTheme.typography.headlineSmall,
+        fontWeight = FontWeight.Bold
+    )
+    Spacer(Modifier.height(16.dp))
+
+    // Performance summary banner
     PerformanceSummaryCard(
         revenue = "N$ %,.2f".format(revenue),
         completedCount = completedJobsCount.toString(),
@@ -278,10 +297,36 @@ fun ManagerHomeContent(
         onTimeRate = onTimeRate
     )
 
-    Spacer(Modifier.height(20.dp))
+    Spacer(Modifier.height(24.dp))
 
-    // 2. Four stat cards
-    Text("Overview", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+    // Quick Actions row
+    Text("Quick Actions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(8.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        StatCard(
+            title = "Reports",
+            value = "View",
+            modifier = Modifier.weight(1f),
+            icon = Icons.Default.Analytics,
+            iconTint = InfoBlue
+        ) { navController.navigateSingleTopTo("reports") }
+
+        StatCard(
+            title = "Payments",
+            value = "Logs",
+            modifier = Modifier.weight(1f),
+            icon = Icons.Default.Payments,
+            iconTint = WarningAmber
+        ) { navController.navigateSingleTopTo("payments") }
+    }
+
+    Spacer(Modifier.height(24.dp))
+
+    Text("Financial Overview", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+
     Spacer(Modifier.height(8.dp))
 
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -328,22 +373,22 @@ fun ManagerHomeContent(
 
     Spacer(Modifier.height(20.dp))
 
-    // 3. Revenue trend bar chart
+    // Revenue trend bar chart
     RevenueTrendSection(revenueTrend)
 
     Spacer(Modifier.height(20.dp))
 
-    // 4. Job type breakdown
+    // Job type breakdown
     JobTypeBreakdownSection(jobTypeBreakdown)
 
     Spacer(Modifier.height(20.dp))
 
-    // 5. Recent activity
+    // Recent activity
     RecentActivitySection(navController, allJobs)
 
     Spacer(Modifier.height(20.dp))
 
-    // 6. Mechanic performance
+    // Mechanic performance
     MechanicPerformanceSection(performances)
 
 

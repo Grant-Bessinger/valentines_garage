@@ -107,7 +107,7 @@ data class RoleNavConfig(
     val overflowItems: List<Screens> = emptyList()
 )
 
-fun getNavConfig(user: UserDto): RoleNavConfig? {
+fun getNavConfig(user: UserDto): RoleNavConfig {
 
     var userRole: UserRole? = null
 
@@ -128,9 +128,10 @@ fun getNavConfig(user: UserDto): RoleNavConfig? {
             overflowItems = listOf(Invoices, Payments)
         )
         UserRole.MANAGER -> RoleNavConfig(
-            primaryItems = listOf(Home, Reports, Payments, History, Profile)
+            primaryItems = listOf(Home, Reports,Payments,  History, Profile)
         )
-
-        else -> null
+        else -> RoleNavConfig(
+            primaryItems = listOf(Home, History, Profile)
+        )
     }
 }
