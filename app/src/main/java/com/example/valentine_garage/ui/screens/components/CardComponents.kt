@@ -183,7 +183,13 @@ fun JobCard(
 }
 
 @Composable
-fun PerformanceSummaryCard() {
+fun PerformanceSummaryCard(
+    revenue: String,
+    completedCount: String,
+    pendingCount: String,
+    onTimeRate: String = "100%",
+    percentageChange: String? = null
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
@@ -198,28 +204,35 @@ fun PerformanceSummaryCard() {
                 Column {
                     Text("This Month", style = MaterialTheme.typography.labelMedium)
                     Text(
-                        "N$ 18,450",
+                        revenue,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text("Total Revenue", style = MaterialTheme.typography.bodySmall)
                 }
-                Surface(
-                    color = SuccessGreen.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                if (percentageChange != null) {
+                    Surface(
+                        color = SuccessGreen.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Icon(
-                            Icons.Default.TrendingUp,
-                            contentDescription = null,
-                            tint = SuccessGreen,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text("+12%", color = SuccessGreen, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.TrendingUp,
+                                contentDescription = null,
+                                tint = SuccessGreen,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                percentageChange,
+                                color = SuccessGreen,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                     }
                 }
             }
@@ -229,11 +242,11 @@ fun PerformanceSummaryCard() {
             Spacer(Modifier.height(12.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                SummaryMetric("24",  "Completed")
+                SummaryMetric(completedCount, "Completed")
                 VerticalDivider(modifier = Modifier.height(36.dp))
-                SummaryMetric("6",   "Pending")
+                SummaryMetric(pendingCount, "Pending")
                 VerticalDivider(modifier = Modifier.height(36.dp))
-                SummaryMetric("95%", "On Time")
+                SummaryMetric(onTimeRate, "On Time")
             }
         }
     }

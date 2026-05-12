@@ -39,7 +39,18 @@ import com.example.valentine_garage.ui.theme.AccentPurple
 import com.example.valentine_garage.ui.theme.ErrorRed
 import com.example.valentine_garage.ui.theme.InfoBlue
 import com.example.valentine_garage.ui.theme.SuccessGreen
+import com.example.valentine_garage.ui.theme.AccentPurple
+import com.example.valentine_garage.ui.theme.ErrorRed
+import com.example.valentine_garage.ui.theme.InfoBlue
+import com.example.valentine_garage.ui.theme.SuccessGreen
 import com.example.valentine_garage.ui.theme.WarningAmber
+import com.example.valentine_garage.dto.JobDto
+import com.example.valentine_garage.dto.MechanicPerformanceDto
+import com.example.valentine_garage.ui.enums.JobStatus
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,15 +84,15 @@ fun DetailScreen(
 // ─── Revenue Trend ────────────────────────────────────────────────────────────
 
 @Composable
-fun RevenueTrendSection() {
-    val months = listOf("Jan" to 12_000f, "Feb" to 15_500f, "Mar" to 11_200f, "Apr" to 18_450f)
-    val maxVal  = months.maxOf { it.second }
+fun RevenueTrendSection(trends: List<Pair<String, Double>> = emptyList()) {
+    val months = trends.ifEmpty { listOf("Jan" to 0.0, "Feb" to 0.0, "Mar" to 0.0, "Apr" to 0.0) }
+    val maxVal  = months.maxOf { it.second }.toFloat().coerceAtLeast(1f)
     val barBase = MaterialTheme.colorScheme.primary
 
     Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text("Revenue Trend", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("Last 4 months", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Monthly revenue distribution", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
 
             Row(
@@ -93,7 +104,7 @@ fun RevenueTrendSection() {
             ) {
                 months.forEachIndexed { i, (month, value) ->
                     val isCurrent     = i == months.lastIndex
-                    val heightFraction = (value / maxVal)
+                    val heightFraction = (value.toFloat() / maxVal)
                     val barColor      = if (isCurrent) SuccessGreen else barBase.copy(alpha = 0.4f)
 
                     Column(
@@ -118,6 +129,7 @@ fun RevenueTrendSection() {
                     }
                 }
             }
+// ... rest remains similar, just adding trends param
 
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -134,14 +146,21 @@ fun RevenueTrendSection() {
 // ─── Job Type Breakdown ───────────────────────────────────────────────────────
 
 @Composable
-fun JobTypeBreakdownSection() {
-    val types = listOf(
-        Triple("Engine & Mechanical", 10, InfoBlue),
-        Triple("Tyres & Brakes",       7, SuccessGreen),
-        Triple("Electrical",           4, WarningAmber),
-        Triple("Other / General",      3, AccentPurple),
-    )
-    val total = types.sumOf { it.second }.toFloat()
+fun JobTypeBreakdownSection(breakdown: Map<String, Int> = emptyMap()) {
+    val types = if (breakdown.isEmpty()) {
+        listOf(
+            Triple("Engine & Mechanical", 0, InfoBlue),
+            Triple("Tyres & Brakes", 0, SuccessGreen),
+            Triple("Electrical", 0, WarningAmber),
+            Triple("Other / General", 0, AccentPurple),
+        )
+    } else {
+        val colors = listOf(InfoBlue, SuccessGreen, WarningAmber, AccentPurple)
+        breakdown.entries.toList().mapIndexed { index, entry ->
+            Triple(entry.key, entry.value, colors[index % colors.size])
+        }
+    }
+    val total = types.sumOf { it.second }.toFloat().coerceAtLeast(1f)
 
     Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -176,12 +195,8 @@ fun JobTypeBreakdownSection() {
 // ─── Recent Activity ──────────────────────────────────────────────────────────
 
 @Composable
-fun RecentActivitySection(navController: NavHostController) {
-    val recentJobs = listOf(
-        listOf("Toyota Corolla", "John",  "Oil change + brake pads", "false", "30 Apr", "N$ 3,200"),
-        listOf("Nissan NP200",   "Mike",  "Awaiting parts",          "true",  "2 May",  ""),
-        listOf("VW Polo",        "Sarah", "Tyre replacement",        "false", "1 May",  "N$ 2,450"),
-    )
+fun RecentActivitySection(navController: NavHostController, jobs: List<JobDto>) {
+    val dateFormat = SimpleDateFormat("dd MMM", LocalLocale.current.platformLocale)
 
     Column {
         Row(
@@ -193,14 +208,14 @@ fun RecentActivitySection(navController: NavHostController) {
             TextButton(onClick = { navController.navigate("completed_jobs") }) { Text("See all") }
         }
 
-        recentJobs.forEach { job ->
+        jobs.take(5).forEach { job ->
             JobCard(
-                vehicle = job[0],
-                mechanic = job[1],
-                work = job[2],
-                isPending = job[3] == "true",
-                date = job[4],
-                invoiceAmount = job[5].ifBlank { null }
+                vehicle = "Vehicle ID: ${job.vehicleId.takeLast(4)}",
+                mechanic = job.mechanicName,
+                work = job.conditionDescription,
+                isPending = job.status != JobStatus.COMPLETED.name,
+                date = dateFormat.format(Date(job.createdAt)),
+                invoiceAmount = null // Would need invoice matching logic
             )
         }
     }
@@ -209,12 +224,7 @@ fun RecentActivitySection(navController: NavHostController) {
 // ─── Mechanic Performance ─────────────────────────────────────────────────────
 
 @Composable
- fun MechanicPerformanceSection() {
-    val mechanics = listOf(
-        Triple("John",  10, 0.95f),
-        Triple("Mike",   8, 0.87f),
-        Triple("Sarah",  6, 0.92f),
-    )
+ fun MechanicPerformanceSection(performances: List<MechanicPerformanceDto> = emptyList()) {
 
     Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -222,7 +232,9 @@ fun RecentActivitySection(navController: NavHostController) {
             Text("Efficiency rating this month", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(12.dp))
 
-            mechanics.forEach { (name, jobs, efficiency) ->
+            performances.forEach { perf ->
+                val totalJobs = perf.completedJobs + perf.pendingJobs + perf.inProgressJobs
+                val efficiency = if (totalJobs > 0) perf.completedJobs.toFloat() / totalJobs else 0f
                 val barColor = when {
                     efficiency >= 0.9f -> SuccessGreen
                     efficiency >= 0.8f -> WarningAmber
@@ -243,7 +255,7 @@ fun RecentActivitySection(navController: NavHostController) {
                         modifier = Modifier.size(36.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text(name.first().toString(), fontWeight = FontWeight.Bold)
+                            Text(perf.mechanicName.firstOrNull()?.toString() ?: "?", fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -253,8 +265,8 @@ fun RecentActivitySection(navController: NavHostController) {
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(name, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-                            Text("$jobs jobs", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(perf.mechanicName, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                            Text("$totalJobs jobs", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Spacer(Modifier.height(4.dp))
                         LinearProgressIndicator(
