@@ -124,11 +124,11 @@ fun getNavConfig(user: UserDto): RoleNavConfig? {
             primaryItems = listOf(Home, CheckIn, Drafts, History, Profile)
         )
         UserRole.MECHANIC -> RoleNavConfig(
-            primaryItems = listOf(Home, Repairs, History, Profile)
+            primaryItems = listOf(Home, Repairs, History, Profile),
+            overflowItems = listOf(Invoices, Payments)
         )
         UserRole.MANAGER -> RoleNavConfig(
-            primaryItems = listOf(Home, Reports, History, Profile),
-            overflowItems = listOf(Invoices, Payments)  // moved to "More"
+            primaryItems = listOf(Home, Reports, Payments, History, Profile)
         )
 
         else -> null
