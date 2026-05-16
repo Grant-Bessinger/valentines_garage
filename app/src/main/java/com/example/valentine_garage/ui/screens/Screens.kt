@@ -44,6 +44,12 @@ object Drafts : Screens {
 
 }
 
+object Invoices : Screens {
+    override val icon = Icons.Filled.Receipt
+    override val route = "invoices"
+
+}
+
 
 // Mechanic
 object Repairs : Screens {
@@ -60,16 +66,15 @@ object Reports : Screens {
 
 }
 
-object Invoices : Screens {
-    override val icon = Icons.Filled.Receipt
-    override val route = "invoices"
-
-}
-
 object Payments : Screens {
     override val icon = Icons.Filled.Payments
     override val route = "payments"
 
+}
+
+object RegisterEmployees : Screens {
+    override val icon = Icons.Filled.PersonAdd
+    override val route = "register_employees"
 }
 
 //Detail Screens
@@ -98,6 +103,18 @@ object UnpaidInvoices : Screens {
 
 }
 
+object RepairDetails : Screens {
+    override val icon = null
+    override val route = "repair_details/{jobId}"
+    fun createRoute(jobId: String) = "repair_details/$jobId"
+}
+
+object InvoiceDetails : Screens {
+    override val icon = null
+    override val route = "invoice_details/{invoiceId}"
+    fun createRoute(invoiceId: String) = "invoice_details/$invoiceId"
+}
+
 
 
 
@@ -121,11 +138,11 @@ fun getNavConfig(user: UserDto): RoleNavConfig {
 
     return when (userRole) {
         UserRole.ADMIN -> RoleNavConfig(
-            primaryItems = listOf(Home, CheckIn, Drafts, History, Profile)
+            primaryItems = listOf(Home, CheckIn, Drafts, History, Profile),
+            overflowItems = listOf(Invoices, RegisterEmployees)
         )
         UserRole.MECHANIC -> RoleNavConfig(
-            primaryItems = listOf(Home, Repairs, History, Profile),
-            overflowItems = listOf(Invoices, Payments)
+            primaryItems = listOf(Home, Repairs, History, Profile)
         )
         UserRole.MANAGER -> RoleNavConfig(
             primaryItems = listOf(Home, Reports,Payments,  History, Profile)

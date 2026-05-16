@@ -15,7 +15,8 @@ data class InvoiceEntity(
     val totalCost: Double,
     val isPaid: Boolean,
     val createdAt: Long,
-    val paidAt: Long?
+    val paidAt: Long?,
+    val isSynced: Boolean = false
 ) {
     fun toDto() = InvoiceDto(
         id = id,

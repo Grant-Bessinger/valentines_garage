@@ -19,9 +19,13 @@ import com.example.valentine_garage.ui.enums.JobStatus
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.ui.platform.LocalLocale
+import com.example.valentine_garage.dto.UserDto
+import com.example.valentine_garage.ui.enums.UserRole
+import kotlin.text.contains
 
 @Composable
 fun HistoryScreen(
+    user: UserDto,
     jobViewModel: JobViewModel = hiltViewModel(),
     invoiceViewModel: InvoiceViewModel = hiltViewModel()
 ) {
@@ -31,33 +35,46 @@ fun HistoryScreen(
     val dateFormat = SimpleDateFormat("dd MMM", LocalLocale.current.platformLocale)
 
     var selectedTabIndex by remember { mutableStateOf(0) }
+
     val tabs = listOf("Jobs", "Invoices")
+
+
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "Activity History",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
-        
-        Spacer(Modifier.height(16.dp))
 
-        TabRow(
-            selectedTabIndex = selectedTabIndex,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary
-        ) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index },
-                    text = { Text(title) }
-                )
+        if(!user.role.contains(UserRole.MECHANIC.name)) {
+            Text(
+                text = "History",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            TabRow(
+                selectedTabIndex = selectedTabIndex,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
+            ) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        text = { Text(title) }
+                    )
+                }
             }
+        } else {
+            Text(
+                text = "Jobs History",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+
         }
 
         Spacer(Modifier.height(16.dp))
@@ -82,16 +99,18 @@ fun HistoryScreen(
                     }
                 }
             } else {
-                if (invoices.isEmpty()) {
-                    EmptyHistoryPlaceholder("No invoices recorded yet.")
-                } else {
-                    invoices.forEach { invoice ->
-                        HistoryInvoiceItem(
-                            id = invoice.id.takeLast(6).uppercase(),
-                            amount = "N$ %,.2f".format(invoice.totalCost),
-                            date = dateFormat.format(Date(invoice.createdAt)),
-                            isPaid = invoice.isPaid
-                        )
+                if(!user.role.contains(UserRole.MECHANIC.name)) {
+                    if (invoices.isEmpty()) {
+                        EmptyHistoryPlaceholder("No invoices recorded yet.")
+                    } else {
+                        invoices.forEach { invoice ->
+                            HistoryInvoiceItem(
+                                id = invoice.id.takeLast(6).uppercase(),
+                                amount = "N$ %,.2f".format(invoice.totalCost),
+                                date = dateFormat.format(Date(invoice.createdAt)),
+                                isPaid = invoice.isPaid
+                            )
+                        }
                     }
                 }
             }

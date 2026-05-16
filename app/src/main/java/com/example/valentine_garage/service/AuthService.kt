@@ -1,16 +1,16 @@
 package com.example.valentine_garage.service
 
 
+import com.example.valentine_garage.dto.EmployeeDto
 import com.example.valentine_garage.dto.UserDto
 import com.example.valentine_garage.service.helper.FirebaseResult
-import com.example.valentine_garage.ui.enums.UserRole
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.auth.User
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 import javax.inject.Inject
 
 class AuthService @Inject constructor(
@@ -86,13 +86,13 @@ class AuthService @Inject constructor(
         password: String,
         displayName: String,
         role: String
-    ): FirebaseResult<UserDto> {
+    ): FirebaseResult<EmployeeDto> {
         return try {
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
             val uid = authResult.user?.uid
                 ?: return FirebaseResult.Failure(Exception("Failed to create account"))
 
-            val user = UserDto(
+            val employee = EmployeeDto(
                 uid = uid,
                 email = email,
                 displayName = displayName,
@@ -100,8 +100,8 @@ class AuthService @Inject constructor(
                 active = true
             )
 
-            firestore.collection(USERS_COLLECTION).document(uid).set(user).await()
-            FirebaseResult.Success(user)
+            firestore.collection(USERS_COLLECTION).document(uid).set(employee).await()
+            FirebaseResult.Success(employee)
         } catch (e: Exception) {
             FirebaseResult.Failure(e)
         }
@@ -109,6 +109,19 @@ class AuthService @Inject constructor(
 
 
     fun isLoggedIn(): Boolean = auth.currentUser != null
+
+    suspend fun getUsersByRole(role: String): FirebaseResult<List<EmployeeDto>> {
+        return try {
+            val snapshot = firestore.collection(USERS_COLLECTION)
+                .whereEqualTo("role", role)
+                .get()
+                .await()
+            val employees = snapshot.toObjects(EmployeeDto::class.java)
+            FirebaseResult.Success(employees)
+        } catch (e: Exception) {
+            FirebaseResult.Failure(e)
+        }
+    }
 
     private fun mapAuthError(message: String?): String = when {
         message == null -> "An unknown error occurred"

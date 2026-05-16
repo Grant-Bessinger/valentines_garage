@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.valentine_garage.dto.VehicleDto
 import com.example.valentine_garage.service.helper.FirebaseResult
+import com.example.valentine_garage.ui.helper.sync.SyncManager
 import com.example.valentine_garage.ui.repositories.VehicleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class VehicleViewModel @Inject constructor(
-    private val vehicleRepository: VehicleRepository
+    private val vehicleRepository: VehicleRepository,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _remoteVehicles = MutableStateFlow<FirebaseResult<List<VehicleDto>>>(FirebaseResult.Success(emptyList()))
@@ -27,13 +29,14 @@ class VehicleViewModel @Inject constructor(
 
     fun fetchRemoteVehicles() {
         viewModelScope.launch {
-            _remoteVehicles.value = vehicleRepository.fetchAllVehiclesRemote()
+            vehicleRepository.syncRemoteVehicles()
         }
     }
 
     fun addVehicle(vehicle: VehicleDto) {
         viewModelScope.launch {
             vehicleRepository.insertVehicle(vehicle)
+            syncManager.scheduleSync()
         }
     }
 

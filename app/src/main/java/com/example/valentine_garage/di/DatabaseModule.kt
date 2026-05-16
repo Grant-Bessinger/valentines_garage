@@ -27,10 +27,10 @@ object DatabaseModule {
     }
 
     @Provides
-    fun provideTruckDao(db: AppDatabase): TruckDao = db.truckDao()
+    fun provideUserDao(db: AppDatabase): UserDao = db.userDao()
 
     @Provides
-    fun provideUserDao(db: AppDatabase): UserDao = db.userDao()
+    fun provideEmployeeDao(db: AppDatabase): EmployeeDao = db.employeeDao()
 
     @Provides
     fun provideClientDao(db: AppDatabase): ClientDao = db.clientDao()

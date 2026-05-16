@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.valentine_garage.dto.JobDto
 import com.example.valentine_garage.dto.MechanicPerformanceDto
 import com.example.valentine_garage.service.helper.FirebaseResult
+import com.example.valentine_garage.ui.helper.sync.SyncManager
 import com.example.valentine_garage.ui.repositories.JobRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +18,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class JobViewModel @Inject constructor(
-    private val jobRepository: JobRepository
+    private val jobRepository: JobRepository,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _remoteJobs = MutableStateFlow<FirebaseResult<List<JobDto>>>(FirebaseResult.Success(emptyList()))
@@ -31,7 +33,7 @@ class JobViewModel @Inject constructor(
 
     fun fetchRemoteJobs() {
         viewModelScope.launch {
-            _remoteJobs.value = jobRepository.fetchAllJobsRemote()
+            jobRepository.syncRemoteJobs()
         }
     }
 
@@ -50,6 +52,7 @@ class JobViewModel @Inject constructor(
     fun addJob(job: JobDto) {
         viewModelScope.launch {
             jobRepository.insertJob(job)
+            syncManager.scheduleSync()
         }
     }
 

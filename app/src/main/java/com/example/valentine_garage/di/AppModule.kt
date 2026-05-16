@@ -13,11 +13,6 @@ import dagger.hilt.components.SingletonComponent
 object AppModule {
 
     @Provides
-    fun provideTruckRepository(truckDao: TruckDao, managerService: ManagerService): TruckRepository {
-        return TruckRepository(truckDao, managerService)
-    }
-
-    @Provides
     fun provideClientRepository(clientDao: ClientDao, managerService: ManagerService): ClientRepository {
         return ClientRepository(clientDao, managerService)
     }

@@ -13,7 +13,8 @@ data class VehicleEntity(
     val model: String,
     val year: String,
     val licensePlate: String,
-    val vin: String
+    val vin: String,
+    val isSynced: Boolean = false
 ) {
     fun toDto() = VehicleDto(
         id = id,

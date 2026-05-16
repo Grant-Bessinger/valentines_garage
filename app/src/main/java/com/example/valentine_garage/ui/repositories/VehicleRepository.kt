@@ -4,6 +4,7 @@ import com.example.valentine_garage.database.dao.VehicleDao
 import com.example.valentine_garage.database.entities.VehicleEntity
 import com.example.valentine_garage.dto.VehicleDto
 import com.example.valentine_garage.service.ManagerService
+import com.example.valentine_garage.service.helper.FirebaseResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -14,7 +15,7 @@ class VehicleRepository @Inject constructor(
 ) {
 
     suspend fun insertVehicle(vehicleDto: VehicleDto) {
-        vehicleDao.insertVehicle(VehicleEntity.fromDto(vehicleDto))
+        vehicleDao.insertVehicles(listOf(VehicleEntity.fromDto(vehicleDto).copy(isSynced = false)))
     }
 
     suspend fun getVehicleById(id: String): VehicleDto? {
@@ -38,6 +39,23 @@ class VehicleRepository @Inject constructor(
     }
 
     // --- Remote ManagerService Methods ---
+
+    suspend fun syncRemoteVehicles() {
+        val result = managerService.getAllVehicles()
+        if (result is FirebaseResult.Success) {
+            val remoteVehicles = result.data
+            val remoteIds = remoteVehicles.map { it.id }
+            
+            if (remoteIds.isEmpty()) {
+                vehicleDao.deleteAllSyncedVehicles()
+            } else {
+                vehicleDao.deleteSyncedVehiclesNotInList(remoteIds)
+            }
+            
+            val entities = remoteVehicles.map { VehicleEntity.fromDto(it).copy(isSynced = true) }
+            vehicleDao.insertVehicles(entities)
+        }
+    }
 
     suspend fun fetchAllVehiclesRemote() = managerService.getAllVehicles()
 }

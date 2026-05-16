@@ -1,5 +1,6 @@
 package com.example.valentine_garage.ui.screens.home.reports
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -37,6 +38,10 @@ import com.example.valentine_garage.ui.screens.components.JobCard
 import com.example.valentine_garage.ui.screens.components.SummaryTile
 import com.example.valentine_garage.ui.viewModels.JobViewModel
 import com.example.valentine_garage.service.helper.FirebaseResult
+import com.example.valentine_garage.ui.screens.RepairDetails
+import java.text.SimpleDateFormat
+import java.util.Date
+import androidx.compose.ui.platform.LocalLocale
 
 @Composable
 fun CompletedJobsScreen(
@@ -96,15 +101,19 @@ fun CompletedJobsScreen(
                     Text("No jobs found for this period.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
+                val currentLocale = LocalLocale.current
+                val dateFormat = SimpleDateFormat("dd MMM", currentLocale.platformLocale)
                 filtered.forEach { job ->
-                    JobCard(
-                        vehicle = "Vehicle ID: ${job.vehicleId}",
-                        mechanic = job.mechanicName,
-                        work = job.conditionDescription,
-                        isPending = false,
-                        date = "ID: ${job.id}",
-                        invoiceAmount = null
-                    )
+                    Box(modifier = Modifier.clickable { navController.navigate(RepairDetails.createRoute(job.id)) }) {
+                        JobCard(
+                            vehicle = "Vehicle ID: ${job.vehicleId.takeLast(6)}",
+                            mechanic = job.mechanicName,
+                            work = job.conditionDescription,
+                            isPending = false,
+                            date = job.completedAt?.let { dateFormat.format(Date(it)) } ?: "Completed",
+                            invoiceAmount = null
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(12.dp))

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.valentine_garage.dto.ClientDto
 import com.example.valentine_garage.service.helper.FirebaseResult
+import com.example.valentine_garage.ui.helper.sync.SyncManager
 import com.example.valentine_garage.ui.repositories.ClientRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ClientViewModel @Inject constructor(
-    private val clientRepository: ClientRepository
+    private val clientRepository: ClientRepository,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _remoteClients = MutableStateFlow<FirebaseResult<List<ClientDto>>>(FirebaseResult.Success(emptyList()))
@@ -27,13 +29,14 @@ class ClientViewModel @Inject constructor(
 
     fun fetchRemoteClients() {
         viewModelScope.launch {
-            _remoteClients.value = clientRepository.fetchAllClientsRemote()
+            clientRepository.syncRemoteClients()
         }
     }
 
     fun addClient(client: ClientDto) {
         viewModelScope.launch {
             clientRepository.insertClient(client)
+            syncManager.scheduleSync()
         }
     }
 

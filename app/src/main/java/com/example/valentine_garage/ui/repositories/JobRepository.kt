@@ -4,6 +4,7 @@ import com.example.valentine_garage.database.dao.JobDao
 import com.example.valentine_garage.database.entities.JobEntity
 import com.example.valentine_garage.dto.JobDto
 import com.example.valentine_garage.service.ManagerService
+import com.example.valentine_garage.service.helper.FirebaseResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -14,7 +15,7 @@ class JobRepository @Inject constructor(
 ) {
 
     suspend fun insertJob(jobDto: JobDto) {
-        jobDao.insertJob(JobEntity.fromDto(jobDto))
+        jobDao.insertJobs(listOf(JobEntity.fromDto(jobDto).copy(isSynced = false)))
     }
 
     suspend fun getJobById(id: String): JobDto? {
@@ -44,6 +45,23 @@ class JobRepository @Inject constructor(
     }
 
     // --- Remote ManagerService Methods ---
+
+    suspend fun syncRemoteJobs() {
+        val result = managerService.getAllJobs()
+        if (result is FirebaseResult.Success) {
+            val remoteJobs = result.data
+            val remoteIds = remoteJobs.map { it.id }
+            
+            if (remoteIds.isEmpty()) {
+                jobDao.deleteAllSyncedJobs()
+            } else {
+                jobDao.deleteSyncedJobsNotInList(remoteIds)
+            }
+            
+            val entities = remoteJobs.map { JobEntity.fromDto(it).copy(isSynced = true) }
+            jobDao.insertJobs(entities)
+        }
+    }
 
     suspend fun fetchAllJobsRemote() = managerService.getAllJobs()
 

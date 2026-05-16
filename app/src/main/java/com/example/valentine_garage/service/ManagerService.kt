@@ -1,5 +1,6 @@
 package com.example.valentine_garage.service
 
+import com.example.valentine_garage.database.entities.JobEntity
 import com.example.valentine_garage.dto.ClientDto
 import com.example.valentine_garage.dto.FinancialSummaryDto
 import com.example.valentine_garage.dto.InvoiceDto
@@ -37,6 +38,28 @@ class ManagerService @Inject constructor(
         return try {
             val snapshot = firestore.collection(VEHICLES).get().await()
             FirebaseResult.Success(snapshot.toObjects(VehicleDto::class.java))
+        } catch (e: Exception) {
+            FirebaseResult.Failure(e)
+        }
+    }
+
+    suspend fun createJob(
+        job: JobDto
+    ): FirebaseResult<JobDto> {
+        return try {
+
+            val existing = firestore.collection(INVOICES)
+                .whereEqualTo("jobId", job.id)
+                .get()
+                .await()
+
+            if (!existing.isEmpty) {
+                val existingJob = existing.toObjects(JobDto::class.java).first()
+                return FirebaseResult.Success(existingJob)
+            }
+
+            firestore.collection(INVOICES).document(job.id).set(job).await()
+            FirebaseResult.Success(job)
         } catch (e: Exception) {
             FirebaseResult.Failure(e)
         }

@@ -6,6 +6,7 @@ import com.example.valentine_garage.dto.FinancialSummaryDto
 import com.example.valentine_garage.dto.InvoiceDto
 import com.example.valentine_garage.dto.JobDto
 import com.example.valentine_garage.service.helper.FirebaseResult
+import com.example.valentine_garage.ui.helper.sync.SyncManager
 import com.example.valentine_garage.ui.repositories.InvoiceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +19,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class InvoiceViewModel @Inject constructor(
-    private val invoiceRepository: InvoiceRepository
+    private val invoiceRepository: InvoiceRepository,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _remoteInvoices = MutableStateFlow<FirebaseResult<List<InvoiceDto>>>(FirebaseResult.Success(emptyList()))
@@ -35,7 +37,7 @@ class InvoiceViewModel @Inject constructor(
 
     fun fetchRemoteInvoices() {
         viewModelScope.launch {
-            _remoteInvoices.value = invoiceRepository.fetchAllInvoicesRemote()
+            invoiceRepository.syncRemoteInvoices()
         }
     }
 
@@ -66,6 +68,7 @@ class InvoiceViewModel @Inject constructor(
     fun addInvoice(invoice: InvoiceDto) {
         viewModelScope.launch {
             invoiceRepository.insertInvoice(invoice)
+            syncManager.scheduleSync()
         }
     }
 

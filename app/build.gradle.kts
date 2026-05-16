@@ -47,6 +47,9 @@ android {
 dependencies {
 
     implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.hilt.work)
+    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.androidx.compose.foundation)
@@ -67,7 +70,9 @@ dependencies {
     implementation(libs.firebase.auth.ktx)
     implementation(libs.hilt.android)
     implementation(libs.material)
+    implementation(libs.gson)
     ksp(libs.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     testImplementation(libs.junit)

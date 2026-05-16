@@ -6,6 +6,8 @@ import com.example.valentine_garage.ui.helper.AuthState
 import com.example.valentine_garage.ui.repositories.AuthRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.valentine_garage.database.entities.UserEntity
+import com.example.valentine_garage.dto.EmployeeDto
 import com.example.valentine_garage.ui.helper.LoginUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,12 +63,28 @@ class AuthViewModel @Inject constructor(
 
 
     fun logout() {
-        repo.logout()
-        _loginState.value = LoginUiState.Idle
+        viewModelScope.launch {
+            repo.logout()
+            _loginState.value = LoginUiState.Idle
+        }
     }
 
     fun resetLoginState() {
         _loginState.value = LoginUiState.Idle
+    }
+
+    suspend fun registerEmployee(
+        email: String,
+        password: String,
+        displayName: String,
+        role: String
+    ) =  repo.createUser(email, password, displayName, role)
+
+
+    fun syncMechanics() {
+        viewModelScope.launch {
+            repo.syncMechanicsLocal()
+        }
     }
 
     // --- Local User Methods (from former UserViewModel) ---
@@ -74,6 +92,7 @@ class AuthViewModel @Inject constructor(
     fun addUser(user: UserDto) {
         viewModelScope.launch {
             repo.insertUserLocal(user)
+
         }
     }
 
@@ -85,5 +104,9 @@ class AuthViewModel @Inject constructor(
             repo.deleteUserLocal(user)
         }
     }
+
+    val allEmployees: StateFlow<List<EmployeeDto>> = repo.getAllEmployeeLocal()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
 }
 

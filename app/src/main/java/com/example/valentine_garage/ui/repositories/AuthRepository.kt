@@ -1,16 +1,20 @@
 package com.example.valentine_garage.ui.repositories
 
+import com.example.valentine_garage.database.dao.EmployeeDao
 import com.example.valentine_garage.database.dao.UserDao
+import com.example.valentine_garage.database.entities.EmployeeEntity
 import com.example.valentine_garage.database.entities.UserEntity
+import com.example.valentine_garage.database.roomDatabase.AppDatabase
+import com.example.valentine_garage.dto.EmployeeDto
 import com.example.valentine_garage.dto.UserDto
 import com.example.valentine_garage.service.AuthService
 import com.example.valentine_garage.service.helper.FirebaseResult
 import com.example.valentine_garage.ui.helper.AuthState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,7 +23,9 @@ import javax.inject.Singleton
 @Singleton
 class AuthRepository @Inject constructor(
     private val authService: AuthService,
-    private val userDao: UserDao
+    private val userDao: UserDao,
+    private val employeeDao: EmployeeDao,
+    private val database: AppDatabase
 ) {
 
     val authState: Flow<AuthState> = authService.currentUserFlow.map { user ->
@@ -35,8 +41,11 @@ class AuthRepository @Inject constructor(
         return result
     }
 
-    fun logout() {
+    suspend fun logout() {
         authService.logout()
+        withContext(Dispatchers.IO) {
+            database.clearAllTables()
+        }
     }
 
     suspend fun getCurrentUser(): FirebaseResult<UserDto> = authService.getCurrentUser()
@@ -48,7 +57,18 @@ class AuthRepository @Inject constructor(
         password: String,
         displayName: String,
         role: String
-    ): FirebaseResult<UserDto> = authService.createUser(email, password, displayName, role)
+    ) = authService.createUser(email, password, displayName, role)
+
+
+    suspend fun syncMechanicsLocal(): FirebaseResult<List<EmployeeDto>> {
+        val result = authService.getUsersByRole("MECHANIC")
+        if (result is FirebaseResult.Success) {
+            result.data.forEach {
+                employeeDao.insertEmployee(EmployeeEntity.fromDto(it))
+            }
+        }
+        return result
+    }
 
     // --- Local User Data Methods (from former UserRepository) ---
 
@@ -72,5 +92,11 @@ class AuthRepository @Inject constructor(
 
     suspend fun deleteUserLocal(userDto: UserDto) {
         userDao.deleteUser(UserEntity.fromDto(userDto))
+    }
+
+    fun getAllEmployeeLocal(): Flow<List<EmployeeDto>> {
+        return employeeDao.getAllEmployees().map { entities ->
+            entities.map { it.toDto() }
+        }
     }
 }

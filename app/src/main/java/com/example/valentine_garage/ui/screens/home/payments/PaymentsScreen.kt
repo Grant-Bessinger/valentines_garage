@@ -1,5 +1,6 @@
 package com.example.valentine_garage.ui.screens.home.payments
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -25,9 +26,14 @@ import com.example.valentine_garage.ui.viewModels.InvoiceViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.ui.platform.LocalLocale
+import androidx.navigation.NavController
+import com.example.valentine_garage.ui.screens.InvoiceDetails
 
 @Composable
-fun PaymentsScreen(viewModel: InvoiceViewModel = hiltViewModel()) {
+fun PaymentsScreen(
+    navController: NavController,
+    viewModel: InvoiceViewModel = hiltViewModel()
+) {
     LaunchedEffect(Unit) {
         viewModel.fetchRemoteInvoices()
         viewModel.fetchFinancialSummary()
@@ -117,7 +123,9 @@ fun PaymentsScreen(viewModel: InvoiceViewModel = hiltViewModel()) {
             }
         } else {
             filteredInvoices.forEach {
-                InvoiceItem(it)
+                InvoiceItem(it) {
+                    navController.navigate(InvoiceDetails.createRoute(it.id))
+                }
             }
         }
     }
@@ -138,7 +146,7 @@ fun PaymentStatCard(title: String, amount: String, color: Color, modifier: Modif
 }
 
 @Composable
-fun InvoiceItem(invoice: InvoiceDto) {
+fun InvoiceItem(invoice: InvoiceDto, onClick: () -> Unit) {
     val statusColor = if (invoice.isPaid) SuccessGreen else ErrorRed
     val statusText = if (invoice.isPaid) "PAID" else "UNPAID"
     val dateFormat = SimpleDateFormat("dd MMM yyyy", LocalLocale.current.platformLocale)
@@ -146,7 +154,8 @@ fun InvoiceItem(invoice: InvoiceDto) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(2.dp),
         shape = MaterialTheme.shapes.medium
     ) {

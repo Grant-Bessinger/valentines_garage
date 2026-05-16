@@ -14,7 +14,7 @@ class ClientRepository @Inject constructor(
 ) {
 
     suspend fun insertClient(clientDto: ClientDto) {
-        clientDao.insertClient(ClientEntity.fromDto(clientDto))
+        clientDao.insertClients(listOf(ClientEntity.fromDto(clientDto).copy(isSynced = false)))
     }
 
     suspend fun getClientById(id: String): ClientDto? {
@@ -32,6 +32,23 @@ class ClientRepository @Inject constructor(
     }
 
     // --- Remote ManagerService Methods ---
+
+    suspend fun syncRemoteClients() {
+        val result = managerService.getAllClients()
+        if (result is com.example.valentine_garage.service.helper.FirebaseResult.Success) {
+            val remoteClients = result.data
+            val remoteIds = remoteClients.map { it.id }
+            
+            if (remoteIds.isEmpty()) {
+                clientDao.deleteAllSyncedClients()
+            } else {
+                clientDao.deleteSyncedClientsNotInList(remoteIds)
+            }
+            
+            val entities = remoteClients.map { ClientEntity.fromDto(it).copy(isSynced = true) }
+            clientDao.insertClients(entities)
+        }
+    }
 
     suspend fun fetchAllClientsRemote() = managerService.getAllClients()
 }

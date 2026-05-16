@@ -157,9 +157,33 @@ fun AdminHomeContent(
 
     Spacer(Modifier.height(20.dp))
     Text("Quick Actions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-    Text("• Register clients", style = MaterialTheme.typography.bodyMedium)
-    Text("• Register vehicles", style = MaterialTheme.typography.bodyMedium)
-    Text("• Create job check-ins", style = MaterialTheme.typography.bodyMedium)
+    Spacer(Modifier.height(8.dp))
+    
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        StatCard(
+            title = "Check-In",
+            value = "New",
+            modifier = Modifier.weight(1f),
+            icon = Icons.Default.AddBusiness,
+            iconTint = InfoBlue
+        ) { navController.navigateSingleTopTo("check_in") }
+
+        StatCard(
+            title = "Staff",
+            value = "Add",
+            modifier = Modifier.weight(1f),
+            icon = Icons.Default.PersonAdd,
+            iconTint = SuccessGreen
+        ) { navController.navigateSingleTopTo("register_employees") }
+
+        StatCard(
+            title = "Invoice",
+            value = "Create",
+            modifier = Modifier.weight(1f),
+            icon = Icons.Default.Receipt,
+            iconTint = WarningAmber
+        ) { navController.navigateSingleTopTo("invoices") }
+    }
 }
 
 @Composable

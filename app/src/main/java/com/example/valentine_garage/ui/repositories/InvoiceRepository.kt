@@ -5,6 +5,7 @@ import com.example.valentine_garage.database.entities.InvoiceEntity
 import com.example.valentine_garage.dto.InvoiceDto
 import com.example.valentine_garage.dto.JobDto
 import com.example.valentine_garage.service.ManagerService
+import com.example.valentine_garage.service.helper.FirebaseResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -15,7 +16,7 @@ class InvoiceRepository @Inject constructor(
 ) {
 
     suspend fun insertInvoice(invoiceDto: InvoiceDto) {
-        invoiceDao.insertInvoice(InvoiceEntity.fromDto(invoiceDto))
+        invoiceDao.insertInvoices(listOf(InvoiceEntity.fromDto(invoiceDto).copy(isSynced = false)))
     }
 
     suspend fun getInvoiceById(id: String): InvoiceDto? {
@@ -43,6 +44,23 @@ class InvoiceRepository @Inject constructor(
     }
 
     // --- Remote ManagerService Methods ---
+
+    suspend fun syncRemoteInvoices() {
+        val result = managerService.getAllInvoices()
+        if (result is FirebaseResult.Success) {
+            val remoteInvoices = result.data
+            val remoteIds = remoteInvoices.map { it.id }
+
+            if (remoteIds.isEmpty()) {
+                invoiceDao.deleteAllSyncedInvoices()
+            } else {
+                invoiceDao.deleteSyncedInvoicesNotInList(remoteIds)
+            }
+
+            val entities = remoteInvoices.map { InvoiceEntity.fromDto(it).copy(isSynced = true) }
+            invoiceDao.insertInvoices(entities)
+        }
+    }
 
     suspend fun generateInvoiceRemote(job: JobDto, labour: Double, parts: Double) =
         managerService.generateInvoice(job, labour, parts)
