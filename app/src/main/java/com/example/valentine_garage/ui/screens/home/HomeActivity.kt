@@ -40,6 +40,7 @@ import com.example.valentine_garage.ui.screens.Invoices
 import com.example.valentine_garage.ui.screens.Payments
 import com.example.valentine_garage.ui.screens.PendingJobs
 import com.example.valentine_garage.ui.screens.Profile
+import com.example.valentine_garage.ui.screens.RepairDetails
 import com.example.valentine_garage.ui.screens.Repairs
 import com.example.valentine_garage.ui.screens.Reports
 import com.example.valentine_garage.ui.screens.RevenueDetails
@@ -54,6 +55,7 @@ import com.example.valentine_garage.ui.screens.home.invoices.UnpaidInvoicesScree
 import com.example.valentine_garage.ui.screens.home.payments.PaymentsScreen
 import com.example.valentine_garage.ui.screens.home.payments.RevenueDetailsScreen
 import com.example.valentine_garage.ui.screens.home.profile.ProfileScreen
+import com.example.valentine_garage.ui.screens.home.repairs.RepairDetailsScreen
 import com.example.valentine_garage.ui.screens.home.repairs.RepairsScreen
 import com.example.valentine_garage.ui.screens.home.reports.CompletedJobsScreen
 import com.example.valentine_garage.ui.screens.home.reports.PendingJobsScreen
@@ -145,19 +147,29 @@ fun ValentineGarageApp(authViewModel: AuthViewModel = hiltViewModel()) {
                     // ── Bottom nav screens ──────────────────────────────
                     composable(Home.route) { HomeScreen(navController, user) }
                     composable(Profile.route) { ProfileScreen() }
-                    composable(History.route) { HistoryScreen() }
+                    composable(History.route) { HistoryScreen(user) }
                     composable(CheckIn.route) { CheckInScreen() }
                     composable(Drafts.route) { DraftsScreen() }
                     composable(Repairs.route) { RepairsScreen() }
                     composable(Reports.route) { ReportsScreen() }
                     composable(Invoices.route) { InvoiceScreen() }
-                    composable(Payments.route) { PaymentsScreen() }
+                    composable(Payments.route) { PaymentsScreen(navController) }
+                    composable(Repairs.route) {
+                        RepairsScreen(
+                            onRepairClick = { jobId -> navController.navigate(RepairDetails.createRoute(jobId)) }
+                        )
+                    }
 
                     // ── Detail screens (no bottom bar) ──────────────────
                     composable(CompletedJobs.route) { CompletedJobsScreen(navController) }
                     composable(PendingJobs.route) { PendingJobsScreen(navController) }
                     composable(RevenueDetails.route) { RevenueDetailsScreen(navController) }
                     composable(UnpaidInvoices.route) { UnpaidInvoicesScreen(navController) }
+
+                    composable(RepairDetails.route) { backStackEntry ->
+                        val jobId = backStackEntry.arguments?.getString("jobId") ?: ""
+                        RepairDetailsScreen(jobId, navController)
+                    }
 
                 }
             }
