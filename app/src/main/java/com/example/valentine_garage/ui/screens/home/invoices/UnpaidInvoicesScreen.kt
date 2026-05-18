@@ -1,5 +1,6 @@
 package com.example.valentine_garage.ui.screens.home.invoices
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.valentine_garage.ui.theme.ErrorRed
+import com.example.valentine_garage.ui.screens.InvoiceDetails
 import com.example.valentine_garage.ui.screens.components.DetailScreen
 import com.example.valentine_garage.ui.viewModels.InvoiceViewModel
 
@@ -56,7 +58,8 @@ fun UnpaidInvoicesScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 6.dp),
+                    .padding(vertical = 6.dp)
+                    .clickable { navController.navigate(InvoiceDetails.createRoute(invoice.id)) },
                 elevation = CardDefaults.cardElevation(4.dp)
             ) {
                 Row(
