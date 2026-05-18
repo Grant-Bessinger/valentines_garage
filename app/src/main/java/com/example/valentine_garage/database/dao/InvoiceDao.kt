@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface InvoiceDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertInvoices(invoices: List<InvoiceEntity>)
+    @Upsert
+    suspend fun upsertInvoices(invoices: List<InvoiceEntity>)
 
     @Query("SELECT * FROM invoices WHERE id = :id")
     suspend fun getInvoiceById(id: String): InvoiceEntity?

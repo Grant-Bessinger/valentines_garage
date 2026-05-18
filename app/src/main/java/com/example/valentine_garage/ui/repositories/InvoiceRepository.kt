@@ -16,7 +16,7 @@ class InvoiceRepository @Inject constructor(
 ) {
 
     suspend fun insertInvoice(invoiceDto: InvoiceDto) {
-        invoiceDao.insertInvoices(listOf(InvoiceEntity.fromDto(invoiceDto).copy(isSynced = false)))
+        invoiceDao.upsertInvoices(listOf(InvoiceEntity.fromDto(invoiceDto).copy(isSynced = false)))
     }
 
     suspend fun getInvoiceById(id: String): InvoiceDto? {
@@ -58,7 +58,7 @@ class InvoiceRepository @Inject constructor(
             }
 
             val entities = remoteInvoices.map { InvoiceEntity.fromDto(it).copy(isSynced = true) }
-            invoiceDao.insertInvoices(entities)
+            invoiceDao.upsertInvoices(entities)
         }
     }
 

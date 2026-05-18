@@ -14,7 +14,7 @@ class ClientRepository @Inject constructor(
 ) {
 
     suspend fun insertClient(clientDto: ClientDto) {
-        clientDao.insertClients(listOf(ClientEntity.fromDto(clientDto).copy(isSynced = false)))
+        clientDao.upsertClients(listOf(ClientEntity.fromDto(clientDto).copy(isSynced = false)))
     }
 
     suspend fun getClientById(id: String): ClientDto? {
@@ -46,7 +46,7 @@ class ClientRepository @Inject constructor(
             }
             
             val entities = remoteClients.map { ClientEntity.fromDto(it).copy(isSynced = true) }
-            clientDao.insertClients(entities)
+            clientDao.upsertClients(entities)
         }
     }
 

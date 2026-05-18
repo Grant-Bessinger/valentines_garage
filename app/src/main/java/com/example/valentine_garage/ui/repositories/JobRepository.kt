@@ -15,7 +15,7 @@ class JobRepository @Inject constructor(
 ) {
 
     suspend fun insertJob(jobDto: JobDto) {
-        jobDao.insertJobs(listOf(JobEntity.fromDto(jobDto).copy(isSynced = false)))
+        jobDao.upsertJobs(listOf(JobEntity.fromDto(jobDto).copy(isSynced = false)))
     }
 
     suspend fun getJobById(id: String): JobDto? {
@@ -59,7 +59,7 @@ class JobRepository @Inject constructor(
             }
             
             val entities = remoteJobs.map { JobEntity.fromDto(it).copy(isSynced = true) }
-            jobDao.insertJobs(entities)
+            jobDao.upsertJobs(entities)
         }
     }
 

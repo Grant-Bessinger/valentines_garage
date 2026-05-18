@@ -15,7 +15,7 @@ class VehicleRepository @Inject constructor(
 ) {
 
     suspend fun insertVehicle(vehicleDto: VehicleDto) {
-        vehicleDao.insertVehicles(listOf(VehicleEntity.fromDto(vehicleDto).copy(isSynced = false)))
+        vehicleDao.upsertVehicles(listOf(VehicleEntity.fromDto(vehicleDto).copy(isSynced = false)))
     }
 
     suspend fun getVehicleById(id: String): VehicleDto? {
@@ -53,7 +53,7 @@ class VehicleRepository @Inject constructor(
             }
             
             val entities = remoteVehicles.map { VehicleEntity.fromDto(it).copy(isSynced = true) }
-            vehicleDao.insertVehicles(entities)
+            vehicleDao.upsertVehicles(entities)
         }
     }
 

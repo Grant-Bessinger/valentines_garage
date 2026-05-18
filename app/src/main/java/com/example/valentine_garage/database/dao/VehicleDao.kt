@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface VehicleDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertVehicles(vehicles: List<VehicleEntity>)
+    @Upsert
+    suspend fun upsertVehicles(vehicles: List<VehicleEntity>)
 
     @Query("SELECT * FROM vehicles WHERE id = :id")
     suspend fun getVehicleById(id: String): VehicleEntity?
