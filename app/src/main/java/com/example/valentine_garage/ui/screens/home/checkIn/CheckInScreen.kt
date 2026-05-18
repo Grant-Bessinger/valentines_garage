@@ -216,6 +216,13 @@ fun CheckInScreen(
                     expanded = mechanicExpanded,
                     onDismissRequest = { mechanicExpanded = false }
                 ) {
+                    DropdownMenuItem(
+                        text = { Text("Leave Unassigned") },
+                        onClick = {
+                            selectedMechanicId = ""
+                            mechanicExpanded = false
+                        }
+                    )
                     mechanics.forEach { mechanic ->
                         DropdownMenuItem(
                             text = { Text(mechanic.displayName) },

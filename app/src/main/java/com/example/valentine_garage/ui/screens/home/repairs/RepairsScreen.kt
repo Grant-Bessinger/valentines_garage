@@ -35,12 +35,13 @@ fun RepairsScreen(
     val dateFormat = SimpleDateFormat("dd MMM yyyy", LocalLocale.current.platformLocale)
 
     var selectedStatus by remember { mutableStateOf<JobStatus?>(null) }
+    var showUnassignedOnly by remember { mutableStateOf(false) }
     var filterExpanded by remember { mutableStateOf(false) }
 
-    val filteredJobs = if (selectedStatus == null) {
-        allJobs
-    } else {
-        allJobs.filter { it.status == selectedStatus?.name }
+    val filteredJobs = allJobs.filter { job ->
+        val statusMatch = selectedStatus == null || job.status == selectedStatus?.name
+        val assignmentMatch = !showUnassignedOnly || job.mechanicId.isBlank() || job.mechanicId == "Unassigned"
+        statusMatch && assignmentMatch
     }
 
     Scaffold{ padding ->
@@ -80,7 +81,11 @@ fun RepairsScreen(
                     ) {
                         DropdownMenuItem(
                             text = { Text("All Jobs") },
-                            onClick = { selectedStatus = null; filterExpanded = false }
+                            onClick = { selectedStatus = null; showUnassignedOnly = false; filterExpanded = false }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Unassigned Only") },
+                            onClick = { showUnassignedOnly = true; filterExpanded = false }
                         )
                         JobStatus.entries.forEach { status ->
                             DropdownMenuItem(
@@ -100,7 +105,11 @@ fun RepairsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (selectedStatus == null) "No repairs found." else "No ${selectedStatus?.name?.lowercase()} jobs.",
+                        text = when {
+                            showUnassignedOnly -> "No unassigned repairs found."
+                            selectedStatus != null -> "No ${selectedStatus?.name?.lowercase()} jobs."
+                            else -> "No repairs found."
+                        },
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

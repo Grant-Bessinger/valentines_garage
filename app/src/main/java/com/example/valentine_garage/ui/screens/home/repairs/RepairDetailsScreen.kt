@@ -46,6 +46,8 @@ fun RepairDetailsScreen(
     
     val currentUser by authViewModel.currentUser.collectAsState(null)
     val isAssignedMechanic = currentUser?.uid == job?.mechanicId
+    val isUnassigned = job?.mechanicId?.isBlank() == true || job?.mechanicId == "Unassigned"
+    val isMechanic = currentUser?.role == "MECHANIC"
     val isAdmin = currentUser?.role == "ADMIN" || currentUser?.role == "MANAGER"
 
     val currentLocale = LocalLocale.current
@@ -168,6 +170,28 @@ fun RepairDetailsScreen(
                 }
 
                 Spacer(Modifier.weight(1f))
+
+                if (isUnassigned && isMechanic) {
+                    Button(
+                        onClick = {
+                            currentUser?.let { user ->
+                                viewModel.addJob(job.copy(
+                                    mechanicId = user.uid,
+                                    mechanicName = user.displayName,
+                                    status = JobStatus.IN_PROGRESS.name
+                                ))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Person, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Assign to Me & Start Work")
+                    }
+                    Spacer(Modifier.height(12.dp))
+                }
 
                 if (job.status != JobStatus.COMPLETED.name && (isAssignedMechanic || isAdmin)) {
                     Button(

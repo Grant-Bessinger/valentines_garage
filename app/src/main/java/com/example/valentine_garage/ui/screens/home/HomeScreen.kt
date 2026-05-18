@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -193,9 +194,13 @@ fun MechanicHomeContent(
     user: UserDto
 ) {
     val mechanicId = user.uid
-    val myJobs by jobViewModel.getJobsByMechanic(mechanicId).collectAsState()
+    val allJobs by jobViewModel.allJobs.collectAsState()
 
-    LaunchedEffect(mechanicId) {
+    val myJobs = remember(allJobs, mechanicId) {
+        allJobs.filter { it.mechanicId == mechanicId }
+    }
+
+    LaunchedEffect(Unit) {
         jobViewModel.fetchRemoteJobs()
     }
 
