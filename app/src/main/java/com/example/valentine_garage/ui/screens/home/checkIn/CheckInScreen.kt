@@ -320,7 +320,7 @@ fun CheckInScreen(
                             mechanicName = mechanics.find { it.uid == selectedMechanicId }?.displayName ?: "Unassigned",
                             odometerReading = odometerReading.toIntOrNull() ?: 0,
                             conditionDescription = conditions.firstOrNull { it.isNotBlank() } ?: "No description",
-                            tasks = conditions.filter { it.isNotBlank() }.map { JobTaskDto(description = it) },
+                            tasks = conditions.filter { it.isNotBlank() }.map { JobTaskDto(  id = UUID.randomUUID().toString(),description = it) },
                             status = JobStatus.PENDING.name,
                             notes = notes
                         )

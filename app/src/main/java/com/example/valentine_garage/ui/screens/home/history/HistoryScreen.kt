@@ -1,5 +1,6 @@
 package com.example.valentine_garage.ui.screens.home.history
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -26,10 +27,18 @@ import kotlin.text.contains
 @Composable
 fun HistoryScreen(
     user: UserDto,
+    onJobClick : (String) -> Unit = {},
+    onInvoiceClicked : (String) -> Unit = {},
     jobViewModel: JobViewModel = hiltViewModel(),
     invoiceViewModel: InvoiceViewModel = hiltViewModel()
 ) {
     val jobs by jobViewModel.allJobs.collectAsState()
+
+   val completedAssignedJobs = jobs.filter {
+       it.status == JobStatus.COMPLETED.name &&
+       it.mechanicId == user.uid
+   }
+
     val invoices by invoiceViewModel.allInvoices.collectAsState()
     
     val dateFormat = SimpleDateFormat("dd MMM", LocalLocale.current.platformLocale)
@@ -85,17 +94,39 @@ fun HistoryScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             if (selectedTabIndex == 0) {
-                if (jobs.isEmpty()) {
-                    EmptyHistoryPlaceholder("No jobs recorded yet.")
+
+                if (user.role.contains(UserRole.MECHANIC.name)){
+                    if (completedAssignedJobs.isEmpty()) {
+                        EmptyHistoryPlaceholder("No jobs recorded yet.")
+                    } else {
+                       completedAssignedJobs.forEach { job ->
+                           Box(modifier = Modifier.clickable { onJobClick(job.id) }) {
+                            JobCard(
+                                vehicle = "Vehicle: ${job.vehicleId.takeLast(6).uppercase()}",
+                                mechanic = job.mechanicName,
+                                work = job.conditionDescription,
+                                isPending = job.status != JobStatus.COMPLETED.name,
+                                date = dateFormat.format(Date(job.createdAt))
+                            )
+                        }
+                            }
+                    }
                 } else {
-                    jobs.forEach { job ->
-                        JobCard(
-                            vehicle = "Vehicle: ${job.vehicleId.takeLast(6).uppercase()}",
-                            mechanic = job.mechanicName,
-                            work = job.conditionDescription,
-                            isPending = job.status != JobStatus.COMPLETED.name,
-                            date = dateFormat.format(Date(job.createdAt))
-                        )
+
+                    if (jobs.isEmpty()) {
+                        EmptyHistoryPlaceholder("No jobs recorded yet.")
+                    } else {
+                        jobs.forEach { job ->
+                            Box(modifier = Modifier.clickable { onJobClick(job.id) }) {
+                                JobCard(
+                                    vehicle = "Vehicle: ${job.vehicleId.takeLast(6).uppercase()}",
+                                    mechanic = job.mechanicName,
+                                    work = job.conditionDescription,
+                                    isPending = job.status != JobStatus.COMPLETED.name,
+                                    date = dateFormat.format(Date(job.createdAt))
+                                )
+                            }
+                        }
                     }
                 }
             } else {

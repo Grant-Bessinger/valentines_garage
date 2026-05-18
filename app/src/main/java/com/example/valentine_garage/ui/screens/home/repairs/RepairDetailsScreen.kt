@@ -226,7 +226,9 @@ fun RepairDetailsScreen(
                 Button(
                     onClick = {
                         if (newTaskDescription.isNotBlank()) {
-                            val newTask = JobTaskDto(description = newTaskDescription)
+                            val newTask = JobTaskDto(
+                                id = UUID.randomUUID().toString(),
+                                description = newTaskDescription)
                             viewModel.addJob(job.copy(tasks = job.tasks + newTask))
                             newTaskDescription = ""
                             showAddTaskDialog = false

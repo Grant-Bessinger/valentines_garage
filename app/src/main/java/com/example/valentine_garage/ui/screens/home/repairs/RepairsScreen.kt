@@ -22,14 +22,17 @@ import com.example.valentine_garage.ui.viewModels.JobViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.ui.platform.LocalLocale
+import com.example.valentine_garage.dto.UserDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RepairsScreen(
-    viewModel: JobViewModel = hiltViewModel(),
-    authViewModel: AuthViewModel = hiltViewModel(),
-    onRepairClick: (String) -> Unit = {}
+    user: UserDto,
+    onRepairClick: (String) -> Unit = {},
+    viewModel: JobViewModel = hiltViewModel()
 ) {
+
+    val mechanicId = user.uid
     val allJobs by viewModel.allJobs.collectAsState()
 
     val dateFormat = SimpleDateFormat("dd MMM yyyy", LocalLocale.current.platformLocale)
@@ -38,7 +41,11 @@ fun RepairsScreen(
     var showUnassignedOnly by remember { mutableStateOf(false) }
     var filterExpanded by remember { mutableStateOf(false) }
 
-    val filteredJobs = allJobs.filter { job ->
+    val myJobs = remember(allJobs, mechanicId) {
+        allJobs.filter { it.mechanicId == mechanicId }
+    }
+
+    val filteredJobs = myJobs.filter { job ->
         val statusMatch = selectedStatus == null || job.status == selectedStatus?.name
         val assignmentMatch = !showUnassignedOnly || job.mechanicId.isBlank() || job.mechanicId == "Unassigned"
         statusMatch && assignmentMatch

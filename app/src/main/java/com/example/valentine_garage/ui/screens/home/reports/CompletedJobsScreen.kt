@@ -42,6 +42,7 @@ import com.example.valentine_garage.ui.screens.RepairDetails
 import java.text.SimpleDateFormat
 import java.util.Date
 import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun CompletedJobsScreen(

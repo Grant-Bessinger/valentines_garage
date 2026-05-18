@@ -37,6 +37,7 @@ import com.example.valentine_garage.ui.screens.Drafts
 import com.example.valentine_garage.ui.screens.History
 import com.example.valentine_garage.ui.screens.Home
 import com.example.valentine_garage.ui.screens.Invoices
+import com.example.valentine_garage.ui.screens.JobDetailsScreen
 import com.example.valentine_garage.ui.screens.Payments
 import com.example.valentine_garage.ui.screens.PendingJobs
 import com.example.valentine_garage.ui.screens.Profile
@@ -60,6 +61,7 @@ import com.example.valentine_garage.ui.screens.home.profile.ProfileScreen
 import com.example.valentine_garage.ui.screens.home.repairs.RepairDetailsScreen
 import com.example.valentine_garage.ui.screens.home.repairs.RepairsScreen
 import com.example.valentine_garage.ui.screens.home.reports.CompletedJobsScreen
+import com.example.valentine_garage.ui.screens.home.reports.JobDetailsScreen
 import com.example.valentine_garage.ui.screens.home.reports.PendingJobsScreen
 import com.example.valentine_garage.ui.screens.home.reports.ReportsScreen
 import com.example.valentine_garage.ui.theme.ValentineGarageTheme
@@ -149,16 +151,17 @@ fun ValentineGarageApp(authViewModel: AuthViewModel = hiltViewModel()) {
                     // ── Bottom nav screens ──────────────────────────────
                     composable(Home.route) { HomeScreen(navController, user) }
                     composable(Profile.route) { ProfileScreen() }
-                    composable(History.route) { HistoryScreen(user) }
+                    composable(History.route) { HistoryScreen(user,
+                        { jobId -> navController.navigate(JobDetailsScreen.createRoute(jobId)) }) }
                     composable(CheckIn.route) { CheckInScreen() }
                     composable(Drafts.route) { DraftsScreen() }
-                    composable(Repairs.route) { RepairsScreen() }
                     composable(Reports.route) { ReportsScreen() }
                     composable(Invoices.route) { InvoiceScreen() }
                     composable(Payments.route) { PaymentsScreen(navController) }
                     composable(RegisterEmployees.route) { RegisterEmployeeScreen() }
                     composable(Repairs.route) {
                         RepairsScreen(
+                            user,
                             onRepairClick = { jobId -> navController.navigate(RepairDetails.createRoute(jobId)) }
                         )
                     }
@@ -168,6 +171,10 @@ fun ValentineGarageApp(authViewModel: AuthViewModel = hiltViewModel()) {
                     composable(PendingJobs.route) { PendingJobsScreen(navController) }
                     composable(RevenueDetails.route) { RevenueDetailsScreen(navController) }
                     composable(UnpaidInvoices.route) { UnpaidInvoicesScreen(navController) }
+                    composable(JobDetailsScreen.route) { backStackEntry ->
+                        val jobId = backStackEntry.arguments?.getString("jobId") ?: ""
+                        JobDetailsScreen(jobId, navController)
+                    }
 
                     composable(RepairDetails.route) { backStackEntry ->
                         val jobId = backStackEntry.arguments?.getString("jobId") ?: ""

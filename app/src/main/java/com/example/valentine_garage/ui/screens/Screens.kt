@@ -81,9 +81,11 @@ object RegisterEmployees : Screens {
 
 object CompletedJobs : Screens {
     override val icon = Icons.Filled.Payments
-    override val route = "completed_jobs"
-
+    override val route = "completed_jobs/{jobId}"
+    fun createRoute(jobId: String) = "completed_jobs/$jobId"
 }
+
+
 
 object PendingJobs : Screens {
     override val icon = Icons.Filled.Payments
@@ -113,6 +115,12 @@ object InvoiceDetails : Screens {
     override val icon = null
     override val route = "invoice_details/{invoiceId}"
     fun createRoute(invoiceId: String) = "invoice_details/$invoiceId"
+}
+
+object JobDetailsScreen : Screens {
+    override val icon = null
+    override val route = "job_details/{jobId}"
+    fun createRoute(jobId: String) = "job_details/$jobId"
 }
 
 
@@ -145,7 +153,7 @@ fun getNavConfig(user: UserDto): RoleNavConfig {
             primaryItems = listOf(Home, Repairs, History, Profile)
         )
         UserRole.MANAGER -> RoleNavConfig(
-            primaryItems = listOf(Home, Reports,Payments,  History, Profile)
+            primaryItems = listOf(Home, Reports,Payments, Profile)
         )
         else -> RoleNavConfig(
             primaryItems = listOf(Home, History, Profile)
