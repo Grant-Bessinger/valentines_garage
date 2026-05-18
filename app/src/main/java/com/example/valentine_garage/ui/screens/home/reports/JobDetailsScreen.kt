@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Adjust
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.History
@@ -22,7 +23,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.valentine_garage.ui.enums.JobStatus
+import com.example.valentine_garage.ui.screens.home.history.EmptyHistoryPlaceholder
 import com.example.valentine_garage.ui.theme.SuccessGreen
+import com.example.valentine_garage.ui.theme.WarningAmber
 import com.example.valentine_garage.ui.viewModels.JobViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -41,34 +45,81 @@ fun JobDetailsScreen(
 
     val currentLocale = LocalLocale.current
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Completed Job Summary") },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navController.popBackStack() }
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
+    if (job == null) {
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            EmptyHistoryPlaceholder("Something went wrong retrieving this job.")
         }
-    ) { padding ->
 
-        if (job == null) {
+    } else {
 
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
+        val isCompleted = job.status == JobStatus.COMPLETED.name
 
+        val statusColor = if (isCompleted) {
+            SuccessGreen
         } else {
+            WarningAmber
+        }
+
+        val statusTitle = when (job.status) {
+
+            JobStatus.COMPLETED.name ->
+                "Completed Job Summary"
+
+            JobStatus.IN_PROGRESS.name ->
+                "Job In Progress"
+
+            JobStatus.PENDING.name ->
+                "Pending Job"
+
+            else ->
+                "Job Summary"
+        }
+
+        val statusMessage = when (job.status) {
+
+            JobStatus.COMPLETED.name ->
+                "This repair job was successfully completed and archived into service history."
+
+            JobStatus.IN_PROGRESS.name ->
+                "This repair job is currently being worked on by the mechanic."
+
+            JobStatus.PENDING.name ->
+                "This repair job is waiting to be started."
+
+            else ->
+                "Job information unavailable."
+        }
+
+        Scaffold(
+            topBar = {
+
+                TopAppBar(
+                    title = {
+                        Text(statusTitle)
+                    },
+
+                    navigationIcon = {
+
+                        IconButton(
+                            onClick = {
+                                navController.popBackStack()
+                            }
+                        ) {
+
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                )
+            }
+        ) { padding ->
 
             Column(
                 modifier = Modifier
@@ -80,10 +131,11 @@ fun JobDetailsScreen(
 
                 // STATUS HEADER
                 Surface(
-                    color = SuccessGreen.copy(alpha = 0.1f),
+                    color = statusColor.copy(alpha = 0.1f),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
+
                     Row(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -93,7 +145,7 @@ fun JobDetailsScreen(
                             modifier = Modifier
                                 .size(10.dp)
                                 .background(
-                                    SuccessGreen,
+                                    statusColor,
                                     RoundedCornerShape(50)
                                 )
                         )
@@ -103,19 +155,30 @@ fun JobDetailsScreen(
                         Column {
 
                             Text(
-                                text = "JOB COMPLETED",
+                                text = "JOB ${job.status.replace("_", " ")}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = SuccessGreen
+                                color = statusColor
                             )
 
                             Spacer(Modifier.height(4.dp))
 
                             Text(
-                                text = SimpleDateFormat(
-                                    "dd MMM yyyy HH:mm",
-                                    currentLocale.platformLocale
-                                ).format(Date(job.completedAt ?: 0)),
+                                text = if (isCompleted) {
+
+                                    "Completed on ${
+                                        SimpleDateFormat(
+                                            "dd MMM yyyy HH:mm",
+                                            currentLocale.platformLocale
+                                        ).format(
+                                            Date(job.completedAt ?: 0)
+                                        )
+                                    }"
+
+                                } else {
+
+                                    "Job currently active"
+                                },
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -149,57 +212,66 @@ fun JobDetailsScreen(
 
                 Spacer(Modifier.height(20.dp))
 
-                // TASKS COMPLETED
-                Text(
-                    text = "Completed Repairs & Checks",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                // TASKS SECTION
+                if (job.tasks.isNotEmpty()) {
 
-                Spacer(Modifier.height(12.dp))
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    Text(
+                        text = if (isCompleted)
+                            "Completed Repairs & Checks"
+                        else
+                            "Assigned Repairs & Checks",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
-                ) {
 
-                    Column(
-                        modifier = Modifier.padding(12.dp)
+                    Spacer(Modifier.height(12.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        )
                     ) {
 
-                        job.tasks.forEach { task ->
+                        Column(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
 
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
+                            job.tasks.forEach { task ->
 
-                                Icon(
-                                    Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    tint = SuccessGreen
-                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
 
-                                Spacer(Modifier.width(12.dp))
+                                    Icon(
+                                        if (isCompleted) Icons.Default.CheckCircle else Icons.Default.Adjust,
+                                        contentDescription = null,
+                                        tint = statusColor
+                                    )
 
-                                Text(
-                                    text = task.description,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
+                                    Spacer(Modifier.width(12.dp))
+
+                                    Text(
+                                        text = task.description,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
                             }
                         }
                     }
+
+                    Spacer(Modifier.height(20.dp))
                 }
 
-                Spacer(Modifier.height(20.dp))
-
-                // FINAL NOTES
+                // NOTES SECTION
                 Text(
-                    text = "Mechanic Final Notes",
+                    text = if (isCompleted)
+                        "Mechanic Final Notes"
+                    else
+                        "Admin Notes",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -215,8 +287,8 @@ fun JobDetailsScreen(
 
                     Text(
                         text = job.notes?.ifBlank {
-                            "No completion notes added."
-                        } ?: job.notes!!,
+                            "No notes added."
+                        } ?: "No notes added.",
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -228,7 +300,7 @@ fun JobDetailsScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = SuccessGreen.copy(alpha = 0.08f)
+                        containerColor = statusColor.copy(alpha = 0.08f)
                     )
                 ) {
 
@@ -243,7 +315,7 @@ fun JobDetailsScreen(
                             Icon(
                                 Icons.Default.History,
                                 contentDescription = null,
-                                tint = SuccessGreen
+                                tint = statusColor
                             )
 
                             Spacer(Modifier.width(8.dp))
@@ -251,14 +323,14 @@ fun JobDetailsScreen(
                             Text(
                                 text = "Job Summary",
                                 fontWeight = FontWeight.Bold,
-                                color = SuccessGreen
+                                color = statusColor
                             )
                         }
 
                         Spacer(Modifier.height(12.dp))
 
                         Text(
-                            text = "This repair job was successfully completed and archived into service history.",
+                            text = statusMessage,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }

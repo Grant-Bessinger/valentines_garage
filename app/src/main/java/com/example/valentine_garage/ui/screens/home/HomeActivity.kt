@@ -173,7 +173,7 @@ fun ValentineGarageApp(authViewModel: AuthViewModel = hiltViewModel()) {
                     composable(UnpaidInvoices.route) { UnpaidInvoicesScreen(navController) }
                     composable(JobDetailsScreen.route) { backStackEntry ->
                         val jobId = backStackEntry.arguments?.getString("jobId") ?: ""
-                        JobDetailsScreen(jobId, navController)
+                        JobDetailsScreen(jobId,  navController)
                     }
 
                     composable(RepairDetails.route) { backStackEntry ->
