@@ -123,6 +123,15 @@ class AuthService @Inject constructor(
         }
     }
 
+    suspend fun sendPasswordResetEmail(email: String): FirebaseResult<Unit> {
+        return try {
+            auth.sendPasswordResetEmail(email).await()
+            FirebaseResult.Success(Unit)
+        } catch (e: Exception) {
+            FirebaseResult.Failure(Exception(mapAuthError(e.message)))
+        }
+    }
+
     private fun mapAuthError(message: String?): String = when {
         message == null -> "An unknown error occurred"
         "no user record" in message -> "No account found with that email"

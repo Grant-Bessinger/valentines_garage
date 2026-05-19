@@ -73,6 +73,13 @@ class AuthViewModel @Inject constructor(
         _loginState.value = LoginUiState.Idle
     }
 
+    fun sendPasswordResetEmail(email: String, onResult: (FirebaseResult<Unit>) -> Unit) {
+        viewModelScope.launch {
+            val result = repo.sendPasswordResetEmail(email)
+            onResult(result)
+        }
+    }
+
     suspend fun registerEmployee(
         email: String,
         password: String,

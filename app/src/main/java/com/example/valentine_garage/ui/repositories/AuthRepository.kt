@@ -59,6 +59,7 @@ class AuthRepository @Inject constructor(
         role: String
     ) = authService.createUser(email, password, displayName, role)
 
+    suspend fun sendPasswordResetEmail(email: String) = authService.sendPasswordResetEmail(email)
 
     suspend fun syncMechanicsLocal(): FirebaseResult<List<EmployeeDto>> {
         val result = authService.getUsersByRole("MECHANIC")
