@@ -57,7 +57,7 @@ fun InvoiceDetailScreen(
     val vehicle = job?.let { j -> allVehicles.find { it.id == j.vehicleId } }
 
     val currentUser by authViewModel.currentUser.collectAsState(null)
-    val isAdmin = currentUser?.role == "ADMIN" || currentUser?.role == "MANAGER"
+    val isAdmin = currentUser?.role == "ADMIN"
 
     val currentLocale = LocalLocale.current
     val dateFormat = SimpleDateFormat("dd MMM yyyy", currentLocale.platformLocale)

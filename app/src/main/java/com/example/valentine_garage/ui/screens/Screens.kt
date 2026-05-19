@@ -81,8 +81,7 @@ object RegisterEmployees : Screens {
 
 object CompletedJobs : Screens {
     override val icon = Icons.Filled.Payments
-    override val route = "completed_jobs/{jobId}"
-    fun createRoute(jobId: String) = "completed_jobs/$jobId"
+    override val route = "completed_jobs"
 }
 
 

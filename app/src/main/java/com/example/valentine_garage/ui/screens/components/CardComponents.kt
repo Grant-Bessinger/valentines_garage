@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -24,15 +25,20 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.valentine_garage.dto.InvoiceDto
 import com.example.valentine_garage.ui.theme.ErrorRed
 import com.example.valentine_garage.ui.theme.InfoBlue
 import com.example.valentine_garage.ui.theme.NeutralGrey
 import com.example.valentine_garage.ui.theme.SuccessGreen
 import com.example.valentine_garage.ui.theme.WarningAmber
+import java.text.SimpleDateFormat
+import java.util.Date
 
 @Composable
 fun StatCard(
@@ -277,6 +283,86 @@ fun SummaryTile(
             Icon(imageVector = icon, contentDescription = null, tint = tint, modifier = Modifier.size(22.dp))
             Text(value, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
             Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+fun InvoiceItem(invoice: InvoiceDto, onClick: () -> Unit) {
+    val statusColor = if (invoice.paid) SuccessGreen else ErrorRed
+    val statusText = if (invoice.paid) "PAID" else "UNPAID"
+    val dateFormat = SimpleDateFormat("dd MMM yyyy", LocalLocale.current.platformLocale)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clickable { onClick() },
+        elevation = CardDefaults.cardElevation(2.dp),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Receipt,
+                        contentDescription = null,
+                        tint = InfoBlue,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "INV-${invoice.id.takeLast(6).uppercase()}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Surface(
+                    color = statusColor.copy(alpha = 0.15f),
+                    shape = MaterialTheme.shapes.extraSmall
+                ) {
+                    Text(
+                        text = statusText,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        color = statusColor,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Total Amount", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("N$ %,.2f".format(invoice.totalCost), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text("Date", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(dateFormat.format(Date(invoice.createdAt)), style = MaterialTheme.typography.bodySmall)
+                }
+            }
+
+            if (invoice.paid && invoice.paidAt != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider(modifier = Modifier.alpha(0.5f))
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Paid on ${dateFormat.format(Date(invoice.paidAt))}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = SuccessGreen
+                )
+            }
         }
     }
 }

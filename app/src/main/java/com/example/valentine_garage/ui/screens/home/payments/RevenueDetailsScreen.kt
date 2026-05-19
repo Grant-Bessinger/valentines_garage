@@ -25,7 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.valentine_garage.service.helper.FirebaseResult
+import com.example.valentine_garage.ui.screens.InvoiceDetails
 import com.example.valentine_garage.ui.screens.components.DetailScreen
+import com.example.valentine_garage.ui.screens.components.InvoiceItem
 import com.example.valentine_garage.ui.viewModels.InvoiceViewModel
 
 @Composable
@@ -37,50 +39,43 @@ fun RevenueDetailsScreen(
         viewModel.fetchRemoteInvoices()
     }
 
-    val remoteInvoicesResult by viewModel.remoteInvoices.collectAsState()
+    val invoices by viewModel.allInvoices.collectAsState()
 
-    val invoices = when (val result = remoteInvoicesResult) {
-        is FirebaseResult.Success -> result.data
-        else -> emptyList()
-    }
-    val total = invoices.sumOf { it.totalCost }
+    val paidInvoices = invoices.filter { it.paid }
+
+    val total = paidInvoices.sumOf { it.totalCost }
 
     DetailScreen(title = "Revenue Details", navController = navController) {
-        if (remoteInvoicesResult is FirebaseResult.Loading) {
-            Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Total Revenue", style = MaterialTheme.typography.labelMedium)
-                    Text(
-                        "N$ %.2f".format(total),
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
 
-            Spacer(Modifier.height(16.dp))
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
 
-            invoices.forEach { invoice ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Invoice: ${invoice.id}", style = MaterialTheme.typography.bodyMedium)
-                    Text(
-                        "N$ %.2f".format(invoice.totalCost),
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                HorizontalDivider()
+                Text(
+                    "Total Revenue",
+                    style = MaterialTheme.typography.labelMedium
+                )
+
+                Text(
+                    "N$ %.2f".format(total),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        paidInvoices.forEach { invoice ->
+
+            InvoiceItem(invoice) {
+                navController.navigate(
+                    InvoiceDetails.createRoute(invoice.id)
+                )
             }
         }
     }

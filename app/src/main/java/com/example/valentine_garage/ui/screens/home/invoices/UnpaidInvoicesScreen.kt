@@ -24,6 +24,7 @@ import androidx.navigation.NavHostController
 import com.example.valentine_garage.ui.theme.ErrorRed
 import com.example.valentine_garage.ui.screens.InvoiceDetails
 import com.example.valentine_garage.ui.screens.components.DetailScreen
+import com.example.valentine_garage.ui.screens.components.InvoiceItem
 import com.example.valentine_garage.ui.viewModels.InvoiceViewModel
 
 @Composable
@@ -54,31 +55,12 @@ fun UnpaidInvoicesScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        unpaid.forEach { invoice ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp)
-                    .clickable { navController.navigate(InvoiceDetails.createRoute(invoice.id)) },
-                elevation = CardDefaults.cardElevation(4.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(invoice.id, fontWeight = FontWeight.Bold)
-                        Text("Job: ${invoice.jobId}", style = MaterialTheme.typography.bodySmall)
-                    }
-                    Text(
-                        "N$ %.2f".format(invoice.totalCost),
-                        color = ErrorRed,
-                        fontWeight = FontWeight.Bold
+            unpaid.forEach { invoice ->
+                InvoiceItem(invoice) {
+                    navController.navigate(
+                        InvoiceDetails.createRoute(invoice.id)
                     )
                 }
             }
-        }
     }
 }

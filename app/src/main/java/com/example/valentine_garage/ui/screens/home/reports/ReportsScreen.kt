@@ -34,6 +34,14 @@ fun ReportsScreen(
     val performanceResult by viewModel.mechanicPerformance.collectAsState()
     val dateFormat = SimpleDateFormat("dd MMM yyyy", LocalLocale.current.platformLocale)
 
+    val jobs by viewModel.allJobs.collectAsState()
+
+    val oneMonthAgo = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000)
+
+    val recentJobs = jobs.filter {
+        it.completedAt != null && it.completedAt >= oneMonthAgo
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -104,30 +112,26 @@ fun ReportsScreen(
         )
         Spacer(modifier = Modifier.height(12.dp))
 
-        when (val result = remoteJobsResult) {
-            is FirebaseResult.Loading -> {
-                Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-            is FirebaseResult.Success -> {
-                val completedJobs = result.data.filter { it.status == "COMPLETED" }
-                if (completedJobs.isEmpty()) {
-                    Text("No completed jobs found.", modifier = Modifier.padding(vertical = 8.dp))
-                } else {
-                    completedJobs.forEach { job ->
-                        JobCard(
-                            vehicle = "Vehicle ID: ${job.vehicleId.takeLast(6)}",
-                            mechanic = job.mechanicName,
-                            work = job.conditionDescription,
-                            isPending = false,
-                            date = job.completedAt?.let { dateFormat.format(Date(it)) } ?: dateFormat.format(Date(job.createdAt))
-                        )
-                    }
-                }
-            }
-            is FirebaseResult.Failure -> {
-                ErrorMessage("Failed to load jobs: ${result.exception.message}")
+        if (recentJobs.isEmpty()) {
+
+            Text(
+                "No completed jobs found.",
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+        } else {
+
+            recentJobs.forEach { job ->
+
+                JobCard(
+                    vehicle = "Vehicle ID: ${job.vehicleId.takeLast(6)}",
+                    mechanic = job.mechanicName,
+                    work = job.conditionDescription,
+                    isPending = false,
+                    date = job.completedAt?.let {
+                        dateFormat.format(Date(it))
+                    } ?: dateFormat.format(Date(job.createdAt))
+                )
             }
         }
     }

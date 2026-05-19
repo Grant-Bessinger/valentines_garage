@@ -43,17 +43,22 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.valentine_garage.ui.enums.JobStatus
+import com.example.valentine_garage.ui.viewModels.InvoiceViewModel
 
 @Composable
 fun CompletedJobsScreen(
     navController: NavHostController,
-    viewModel: JobViewModel = hiltViewModel()
+    viewModel: JobViewModel = hiltViewModel(),
+    invoiceViewModel: InvoiceViewModel = hiltViewModel()
 ) {
     LaunchedEffect(Unit) {
         viewModel.fetchCompletedJobsRemote()
     }
 
     val remoteJobsResult by viewModel.remoteJobs.collectAsState()
+
+    val invoices by invoiceViewModel.allInvoices.collectAsState()
 
     val allJobs = when (val result = remoteJobsResult) {
         is FirebaseResult.Success -> result.data
@@ -63,11 +68,28 @@ fun CompletedJobsScreen(
     val filters = listOf("All", "This Week", "This Month")
     var selectedFilter by remember { mutableStateOf("All") }
 
+    val completedJobs = allJobs.filter { it.status == JobStatus.COMPLETED.name }
+
+    val completedJobIds = completedJobs.map { it.id }
+
+    val relatedInvoices = invoices.filter {
+        it.jobId in completedJobIds
+    }
+
+    val paidInvoices = invoices.filter {
+        it.jobId in completedJobIds && it.paid
+    }
+
     // Simplified filtering logic for DTOs
     val filtered = allJobs
 
-    val totalRevenue = 0.0 // Needs Invoice info normally
-    val avgJobValue  = 0.0
+    val totalRevenue = paidInvoices.sumOf { it.totalCost }
+
+    val avgJobValue = if (relatedInvoices.isNotEmpty()) {
+        totalRevenue / relatedInvoices.size
+    } else {
+        0.0
+    }
 
     DetailScreen(title = "Completed Jobs", navController = navController) {
         if (remoteJobsResult is FirebaseResult.Loading) {

@@ -1,5 +1,6 @@
 package com.example.valentine_garage.ui.screens.home.reports
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.valentine_garage.service.helper.FirebaseResult
 import com.example.valentine_garage.ui.enums.JobStatus
+import com.example.valentine_garage.ui.screens.RepairDetails
 import com.example.valentine_garage.ui.screens.components.DetailScreen
 import com.example.valentine_garage.ui.screens.components.JobCard
 import com.example.valentine_garage.ui.viewModels.JobViewModel
@@ -32,29 +34,31 @@ fun PendingJobsScreen(
         viewModel.fetchRemoteJobs()
     }
 
-    val remoteJobsResult by viewModel.remoteJobs.collectAsState()
+    val remoteJobsResult by viewModel.allJobs.collectAsState()
 
-    val pendingJobs = when (val result = remoteJobsResult) {
-        is FirebaseResult.Success -> result.data.filter { it.status == JobStatus.PENDING.name }
-        else -> emptyList()
-    }
+    val pendingJobs = remoteJobsResult.filter { it.status == JobStatus.PENDING.name }
 
     DetailScreen(title = "Pending Jobs", navController = navController) {
-        if (remoteJobsResult is FirebaseResult.Loading) {
-            Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else {
+
             Text("${pendingJobs.size} jobs pending", style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(12.dp))
             pendingJobs.forEach { job ->
-                JobCard(
-                    vehicle = "Vehicle: ${job.vehicleId}",
-                    mechanic = job.mechanicName,
-                    work = job.conditionDescription,
-                    isPending = true
-                )
+
+                Box(modifier = Modifier.clickable {
+                    navController.navigate(
+                        RepairDetails.createRoute(
+                            job.id
+                        )
+                    )
+                }) {
+                    JobCard(
+                        vehicle = "Vehicle: ${job.vehicleId}",
+                        mechanic = job.mechanicName,
+                        work = job.conditionDescription,
+                        isPending = true
+                    )
+                }
             }
-        }
+
     }
 }
