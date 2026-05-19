@@ -140,7 +140,7 @@ fun HistoryScreen(
                                     id = invoice.id.takeLast(6).uppercase(),
                                     amount = "N$ %,.2f".format(invoice.totalCost),
                                     date = dateFormat.format(Date(invoice.createdAt)),
-                                    isPaid = invoice.isPaid
+                                    isPaid = invoice.paid
                                 )
                             }
                         }

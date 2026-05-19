@@ -10,7 +10,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.valentine_garage.dto.InvoiceDto
-import com.example.valentine_garage.dto.JobDto
 import com.example.valentine_garage.ui.enums.JobStatus
 import com.example.valentine_garage.ui.viewModels.InvoiceViewModel
 import com.example.valentine_garage.ui.viewModels.JobViewModel
@@ -24,7 +23,10 @@ fun InvoiceScreen(
     jobViewModel: JobViewModel = hiltViewModel()
 ) {
     val allJobs by jobViewModel.allJobs.collectAsState()
-    val completedJobs = allJobs.filter { it.status == JobStatus.COMPLETED.name }
+    val allInvoices by invoiceViewModel.allInvoices.collectAsState()
+    val completedUnpaidJobs = allJobs.filter { job ->
+        job.status == JobStatus.COMPLETED.name && allInvoices.none { invoice -> invoice.jobId == job.id }
+    }
 
     var selectedJobId by remember { mutableStateOf("") }
     var labour by remember { mutableStateOf("") }
@@ -64,7 +66,7 @@ fun InvoiceScreen(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded }
             ) {
-                val selectedJob = completedJobs.find { it.id == selectedJobId }
+                val selectedJob = completedUnpaidJobs.find { it.id == selectedJobId }
                 OutlinedTextField(
                     value = selectedJob?.let { "Job: ${it.id.takeLast(6)} - ${it.mechanicName}" } ?: "Select Completed Job",
                     onValueChange = {},
@@ -77,13 +79,13 @@ fun InvoiceScreen(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    if (completedJobs.isEmpty()) {
+                    if (completedUnpaidJobs.isEmpty()) {
                         DropdownMenuItem(
                             text = { Text("No completed jobs available") },
                             onClick = { expanded = false }
                         )
                     } else {
-                        completedJobs.forEach { job ->
+                        completedUnpaidJobs.forEach { job ->
                             DropdownMenuItem(
                                 text = { Text("Job ${job.id.takeLast(6)} (${job.mechanicName})") },
                                 onClick = {
@@ -140,7 +142,7 @@ fun InvoiceScreen(
                         scope.launch { snackbarHostState.showSnackbar("Please select a job") }
                         return@Button
                     }
-                    val selectedJob = completedJobs.find { it.id == selectedJobId } ?: return@Button
+                    val selectedJob = completedUnpaidJobs.find { it.id == selectedJobId } ?: return@Button
 
                     val invoice = InvoiceDto(
                         id = UUID.randomUUID().toString(),
@@ -149,7 +151,7 @@ fun InvoiceScreen(
                         labourCost = labour.toDoubleOrNull() ?: 0.0,
                         partsCost = parts.toDoubleOrNull() ?: 0.0,
                         totalCost = total,
-                        isPaid = false,
+                        paid = false,
                         createdAt = System.currentTimeMillis()
                     )
                     invoiceViewModel.addInvoice(invoice)

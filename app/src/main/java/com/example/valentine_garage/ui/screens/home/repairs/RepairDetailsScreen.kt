@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalLocale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.valentine_garage.dto.JobDto
 import com.example.valentine_garage.dto.JobTaskDto
 import com.example.valentine_garage.ui.enums.JobStatus
 import com.example.valentine_garage.ui.theme.SuccessGreen
@@ -42,21 +41,30 @@ fun RepairDetailsScreen(
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val allJobs by viewModel.allJobs.collectAsState()
-    val job = allJobs.find { it.id == jobId }
-    
-    val currentUser by authViewModel.currentUser.collectAsState(null)
-    val isAssignedMechanic = currentUser?.uid == job?.mechanicId
-    val isUnassigned = job?.mechanicId?.isBlank() == true || job?.mechanicId == "Unassigned"
-    val isMechanic = currentUser?.role == "MECHANIC"
-    val isAdmin = currentUser?.role == "ADMIN" || currentUser?.role == "MANAGER"
+    val remoteJob = allJobs.find { it.id == jobId }
 
+    var job by remember { mutableStateOf(remoteJob) }
+
+    var localTasks by remember { mutableStateOf<List<JobTaskDto>>(emptyList()) }
+
+    LaunchedEffect(remoteJob) {
+        remoteJob?.let {
+            job = it
+
+            if (localTasks.isEmpty()) {
+                localTasks = it.tasks
+            }
+        }
+    }
+
+    val currentUser by authViewModel.currentUser.collectAsState(null)
     val currentLocale = LocalLocale.current
     var showCompletionDialog by remember { mutableStateOf(false) }
     var showAddTaskDialog by remember { mutableStateOf(false) }
     var newTaskDescription by remember { mutableStateOf("") }
     var mechanicNotes by remember { mutableStateOf("") }
 
-    val allTasksDone = job?.tasks?.isNotEmpty() == true && job.tasks.all { it.isCompleted }
+    val isLoading = allJobs.isEmpty()
 
     Scaffold(
         topBar = {
@@ -70,220 +78,250 @@ fun RepairDetailsScreen(
             )
         }
     ) { padding ->
-        if (job == null) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+        when {
+            isLoading -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             }
-        } else {
-            Column(
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize()
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                StatusHeader(job.status)
-                
-                Spacer(Modifier.height(24.dp))
-
-                InfoSection(
-                    title = "Vehicle & Mechanic",
-                    icon = Icons.Default.Build,
-                    items = listOf(
-                        "Vehicle ID" to job.vehicleId,
-                        "Mechanic" to job.mechanicName,
-                        "Odometer" to "${job.odometerReading} km"
-                    )
-                )
-
-                Spacer(Modifier.height(16.dp))
-
-                InfoSection(
-                    title = "Job Description",
-                    icon = Icons.Default.History,
-                    items = listOf(
-                        "Reported Condition" to job.conditionDescription,
-                        "Check-in Notes" to job.notes
-                    )
-                )
-
-                Spacer(Modifier.height(24.dp))
-
-                // --- Tasks Section ---
-                Text("Repair Checklist", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("Mark each issue as fixed", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(8.dp))
-
-                job.tasks.forEach { task ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = task.isCompleted,
-                            onCheckedChange = { checked ->
-                                val updatedTasks = job.tasks.map {
-                                    if (it.id == task.id) it.copy(isCompleted = checked) else it
-                                }
-                                viewModel.addJob(job.copy(tasks = updatedTasks))
-                            },
-                            enabled = job.status != JobStatus.COMPLETED.name && (isAssignedMechanic || isAdmin)
-                        )
-                        Text(
-                            text = task.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+            job == null -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Job not found")
                 }
+            }
+            else -> {
+                val currentJob = job!!
 
-                if (job.status != JobStatus.COMPLETED.name && (isAssignedMechanic || isAdmin)) {
-                    TextButton(
-                        onClick = { showAddTaskDialog = true },
-                        modifier = Modifier.padding(start = 4.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Add More Conditions / Issues")
-                    }
-                }
+                val isAssignedMechanic = currentUser?.uid == currentJob.mechanicId
+                val isUnassigned = currentJob.mechanicId.isBlank() || currentJob.mechanicId == "Unassigned"
+                val isMechanic = currentUser?.role == "MECHANIC"
+                val isAdmin = currentUser?.role == "ADMIN" || currentUser?.role == "MANAGER"
+                val allTasksDone = currentJob.tasks.isNotEmpty() && currentJob.tasks.all { it.completed }
 
-                if (job.status == JobStatus.COMPLETED.name) {
+                Column(
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize()
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    StatusHeader(currentJob.status)
+
+                    Spacer(Modifier.height(24.dp))
+
+                    InfoSection(
+                        title = "Vehicle & Mechanic",
+                        icon = Icons.Default.Build,
+                        items = listOf(
+                            "Vehicle ID" to currentJob.vehicleId,
+                            "Mechanic" to currentJob.mechanicName,
+                            "Odometer" to "${currentJob.odometerReading} km"
+                        )
+                    )
+
                     Spacer(Modifier.height(16.dp))
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = SuccessGreen.copy(alpha = 0.1f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = SuccessGreen)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Completion Summary", fontWeight = FontWeight.Bold, color = SuccessGreen)
-                            }
-                            Spacer(Modifier.height(8.dp))
+
+                    InfoSection(
+                        title = "Job Description",
+                        icon = Icons.Default.History,
+                        items = listOf(
+                            "Reported Condition" to currentJob.conditionDescription,
+                            "Check-in Notes" to currentJob.notes
+                        )
+                    )
+
+                    Spacer(Modifier.height(24.dp))
+
+                    Text("Repair Checklist", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Mark each issue as fixed", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(8.dp))
+
+                    localTasks.forEach { task ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = task.completed,
+                                onCheckedChange = { checked ->
+                                    localTasks = localTasks.map {
+                                        if (it.id == task.id) {
+                                            it.copy(completed = checked)
+                                        } else {
+                                            it
+                                        }
+                                    }
+                                    job = currentJob.copy(tasks = localTasks)
+                                },
+                                enabled = currentJob.status != JobStatus.COMPLETED.name && (isAssignedMechanic || isAdmin)
+                            )
                             Text(
-                                text = "Completed on: ${SimpleDateFormat("dd MMM yyyy HH:mm", currentLocale.platformLocale).format(Date(job.completedAt ?: 0))}",
-                                style = MaterialTheme.typography.bodySmall
+                                text = task.description,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f)
                             )
                         }
                     }
+
+                    if (currentJob.status != JobStatus.COMPLETED.name && (isAssignedMechanic || isAdmin)) {
+                        TextButton(
+                            onClick = { showAddTaskDialog = true },
+                            modifier = Modifier.padding(start = 4.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Add More Conditions / Issues")
+                        }
+                    }
+
+                    if (currentJob.status == JobStatus.COMPLETED.name) {
+                        Spacer(Modifier.height(16.dp))
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = SuccessGreen.copy(alpha = 0.1f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(Modifier.padding(16.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = SuccessGreen)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Completion Summary", fontWeight = FontWeight.Bold, color = SuccessGreen)
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    text = "Completed on: ${
+                                        SimpleDateFormat("dd MMM yyyy HH:mm", currentLocale.platformLocale)
+                                            .format(Date(currentJob.completedAt ?: 0))
+                                    }",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.weight(1f))
+
+                    if (isUnassigned && isMechanic) {
+                        Button(
+                            onClick = {
+                                currentUser?.let { user ->
+                                    val updatedJob = currentJob.copy(
+                                        mechanicId = user.uid,
+                                        mechanicName = user.displayName,
+                                        status = JobStatus.IN_PROGRESS.name
+                                    )
+                                    job = updatedJob
+                                    viewModel.addJob(updatedJob)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.Person, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Assign to Me & Start Work")
+                        }
+                        Spacer(Modifier.height(12.dp))
+                    }
+
+                    if (currentJob.status != JobStatus.COMPLETED.name && (isAssignedMechanic || isAdmin)) {
+                        Button(
+                            onClick = { showCompletionDialog = true },
+                            enabled = allTasksDone,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(if (allTasksDone) "Mark as Completed" else "Finish All Tasks First")
+                        }
+                    }
                 }
 
-                Spacer(Modifier.weight(1f))
+                if (showAddTaskDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showAddTaskDialog = false },
+                        title = { Text("Add Vehicle Condition") },
+                        text = {
+                            OutlinedTextField(
+                                value = newTaskDescription,
+                                onValueChange = { newTaskDescription = it },
+                                label = { Text("Issue Found") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    if (newTaskDescription.isNotBlank()) {
+                                        val newTask = JobTaskDto(
+                                            id = UUID.randomUUID().toString(),
+                                            description = newTaskDescription
+                                        )
+                                        localTasks = localTasks + newTask
 
-                if (isUnassigned && isMechanic) {
-                    Button(
-                        onClick = {
-                            currentUser?.let { user ->
-                                viewModel.addJob(job.copy(
-                                    mechanicId = user.uid,
-                                    mechanicName = user.displayName,
-                                    status = JobStatus.IN_PROGRESS.name
-                                ))
+                                        job = job!!.copy(
+                                            tasks = localTasks
+                                        )
+
+                                        newTaskDescription = ""
+                                        showAddTaskDialog = false
+                                    }
+                                }
+                            ) { Text("Add") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showAddTaskDialog = false }) { Text("Cancel") }
+                        }
+                    )
+                }
+
+                if (showCompletionDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showCompletionDialog = false },
+                        title = { Text("Complete Job") },
+                        text = {
+                            Column {
+                                Text("Provide final details for the manager and customer.")
+                                Spacer(Modifier.height(16.dp))
+                                OutlinedTextField(
+                                    value = mechanicNotes,
+                                    onValueChange = { mechanicNotes = it },
+                                    label = { Text("Work Performed / Final Notes") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    minLines = 3
+                                )
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Person, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Assign to Me & Start Work")
-                    }
-                    Spacer(Modifier.height(12.dp))
-                }
+                        confirmButton = {
+                            Button(
+                                onClick = {
 
-                if (job.status != JobStatus.COMPLETED.name && (isAssignedMechanic || isAdmin)) {
-                    Button(
-                        onClick = { showCompletionDialog = true },
-                        enabled = allTasksDone,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.CheckCircle, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(if (allTasksDone) "Mark as Completed" else "Finish All Tasks First")
-                    }
+                                    val updatedJob = job!!.copy(
+                                        status = JobStatus.COMPLETED.name,
+                                        tasks = localTasks,
+                                        completedAt = System.currentTimeMillis(),
+                                        notes = "${job!!.notes}\n\n--- COMPLETION NOTES ---\n$mechanicNotes"
+                                    )
+
+                                    job = updatedJob
+
+                                    viewModel.addJob(updatedJob)
+
+                                    showCompletionDialog = false
+                                }
+                            ) {
+                                Text("Finish Job")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showCompletionDialog = false }) { Text("Cancel") }
+                        }
+                    )
                 }
             }
         }
-    }
-
-    if (showAddTaskDialog && job != null) {
-        AlertDialog(
-            onDismissRequest = { showAddTaskDialog = false },
-            title = { Text("Add Vehicle Condition") },
-            text = {
-                OutlinedTextField(
-                    value = newTaskDescription,
-                    onValueChange = { newTaskDescription = it },
-                    label = { Text("Issue Found") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (newTaskDescription.isNotBlank()) {
-                            val newTask = JobTaskDto(
-                                id = UUID.randomUUID().toString(),
-                                description = newTaskDescription)
-                            viewModel.addJob(job.copy(tasks = job.tasks + newTask))
-                            newTaskDescription = ""
-                            showAddTaskDialog = false
-                        }
-                    }
-                ) {
-                    Text("Add")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showAddTaskDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    if (showCompletionDialog && job != null) {
-        AlertDialog(
-            onDismissRequest = { showCompletionDialog = false },
-            title = { Text("Complete Job") },
-            text = {
-                Column {
-                    Text("Provide final details for the manager and customer.")
-                    Spacer(Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = mechanicNotes,
-                        onValueChange = { mechanicNotes = it },
-                        label = { Text("Work Performed / Final Notes") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val updatedJob = job.copy(
-                            status = JobStatus.COMPLETED.name,
-                            completedAt = System.currentTimeMillis(),
-                            notes = "${job.notes}\n\n--- COMPLETION NOTES ---\n$mechanicNotes"
-                        )
-                        viewModel.addJob(updatedJob) // Repositories use REPLACE strategy
-                        showCompletionDialog = false
-                    }
-                ) {
-                    Text("Finish Job")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showCompletionDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
     }
 }
 
@@ -294,7 +332,7 @@ fun StatusHeader(status: String) {
         JobStatus.IN_PROGRESS.name -> WarningAmber
         else -> Color.Gray
     }
-    
+
     Surface(
         color = color.copy(alpha = 0.1f),
         shape = RoundedCornerShape(8.dp),

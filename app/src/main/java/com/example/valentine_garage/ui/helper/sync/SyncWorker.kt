@@ -13,6 +13,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.valentine_garage.ui.repositories.ClientRepository
+import com.example.valentine_garage.ui.repositories.InvoiceRepository
 import com.example.valentine_garage.ui.repositories.JobRepository
 import com.example.valentine_garage.ui.repositories.VehicleRepository
 import dagger.assisted.Assisted
@@ -29,6 +30,7 @@ class SyncWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val clientRepository: ClientRepository,
     private val jobRepository: JobRepository,
+    private val invoiceRepository: InvoiceRepository,
     private val vehicleRepository: VehicleRepository,
     private val notificationHelper: NotificationHelper
 ) : CoroutineWorker(context, params) {
@@ -43,7 +45,7 @@ class SyncWorker @AssistedInject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun doWork(): Result {
-        val totalPending = jobRepository.getUnsyncedCount()
+        val totalPending = jobRepository.getUnsyncedCount() + invoiceRepository.getUnsyncedCount()
 
         if (totalPending == 0L) {
             Log.d(TAG, "Nothing to sync, exiting early")
@@ -77,10 +79,14 @@ class SyncWorker @AssistedInject constructor(
             notify { notificationHelper.notifyProgress("Uploading jobs…") }
             totalSynced += jobRepository.pushUnsyncedJobs()
 
+            notify { notificationHelper.notifyProgress("Uploading invoices…") }
+            totalSynced += invoiceRepository.pushUnsyncedInvoices()
+
             notify { notificationHelper.notifyProgress("Pulling latest data…") }
             clientRepository.syncRemoteClients()
             vehicleRepository.syncRemoteVehicles()
             jobRepository.syncRemoteJobs()
+            invoiceRepository.syncRemoteInvoices()
 
             Log.d(TAG, "Sync complete — $totalSynced record(s) uploaded")
             notify { notificationHelper.notifySuccess(totalSynced) }

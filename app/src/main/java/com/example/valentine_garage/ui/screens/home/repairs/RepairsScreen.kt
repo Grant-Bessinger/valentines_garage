@@ -42,7 +42,7 @@ fun RepairsScreen(
     var filterExpanded by remember { mutableStateOf(false) }
 
     val myJobs = remember(allJobs, mechanicId) {
-        allJobs.filter { it.mechanicId == mechanicId }
+        allJobs.filter { it.mechanicId == mechanicId || it.mechanicName == "Unassigned"}
     }
 
     val filteredJobs = myJobs.filter { job ->
@@ -127,7 +127,17 @@ fun RepairsScreen(
                     contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
                     items(filteredJobs, key = { it.id }) { job ->
-                        Box(modifier = Modifier.clickable { onRepairClick(job.id) }) {
+                        Box(modifier = Modifier.clickable {
+
+                            viewModel.addJob(job.copy(
+                                mechanicId = user.uid,
+                                mechanicName = user.displayName
+                            ))
+
+                            onRepairClick(job.id)
+
+
+                        }) {
                             JobCard(
                                 vehicle = "Vehicle ID: ${job.vehicleId.takeLast(6)}",
                                 mechanic = job.mechanicName,

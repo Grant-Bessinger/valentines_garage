@@ -9,7 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Receipt
@@ -24,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.valentine_garage.dto.InvoiceDto
 import com.example.valentine_garage.ui.theme.InfoBlue
 import com.example.valentine_garage.ui.theme.SuccessGreen
 import com.example.valentine_garage.ui.viewModels.AuthViewModel
@@ -88,7 +86,7 @@ fun InvoiceDetailScreen(
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                InvoiceStatusHeader(invoice.isPaid)
+                InvoiceStatusHeader(invoice.paid)
 
                 Spacer(Modifier.height(24.dp))
 
@@ -170,12 +168,12 @@ fun InvoiceDetailScreen(
 
                 Spacer(Modifier.height(40.dp))
 
-                if (!invoice.isPaid && isAdmin) {
+                if (!invoice.paid && isAdmin) {
                     Button(
                         onClick = {
                             invoiceViewModel.markAsPaidRemote(invoice.id)
                             // Also update locally for immediate feedback
-                            invoiceViewModel.addInvoice(invoice.copy(isPaid = true, paidAt = System.currentTimeMillis()))
+                            invoiceViewModel.addInvoice(invoice.copy(paid = true, paidAt = System.currentTimeMillis()))
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
@@ -185,7 +183,7 @@ fun InvoiceDetailScreen(
                         Spacer(Modifier.width(8.dp))
                         Text("Confirm Payment Received")
                     }
-                } else if (invoice.isPaid) {
+                } else if (invoice.paid) {
                     Card(
                         colors = CardDefaults.cardColors(containerColor = SuccessGreen.copy(alpha = 0.1f)),
                         modifier = Modifier.fillMaxWidth()

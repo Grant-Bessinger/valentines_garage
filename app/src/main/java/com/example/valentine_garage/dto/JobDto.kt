@@ -1,12 +1,11 @@
 package com.example.valentine_garage.dto
 
 import com.example.valentine_garage.ui.enums.JobStatus
-import java.util.UUID
 
 data class JobTaskDto(
     val id: String = "",
     val description: String = "",
-    val isCompleted: Boolean = false
+    val completed: Boolean = false
 )
 
 data class JobDto(

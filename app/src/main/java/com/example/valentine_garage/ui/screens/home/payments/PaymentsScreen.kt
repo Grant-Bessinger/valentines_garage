@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,7 +20,6 @@ import com.example.valentine_garage.service.helper.FirebaseResult
 import com.example.valentine_garage.ui.theme.ErrorRed
 import com.example.valentine_garage.ui.theme.InfoBlue
 import com.example.valentine_garage.ui.theme.SuccessGreen
-import com.example.valentine_garage.ui.theme.WarningAmber
 import com.example.valentine_garage.ui.viewModels.InvoiceViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -51,8 +49,8 @@ fun PaymentsScreen(
     val tabs = listOf("All", "Paid", "Unpaid")
 
     val filteredInvoices = when (selectedTabIndex) {
-        1 -> invoices.filter { it.isPaid }
-        2 -> invoices.filter { !it.isPaid }
+        1 -> invoices.filter { it.paid }
+        2 -> invoices.filter { !it.paid }
         else -> invoices
     }
 
@@ -147,8 +145,8 @@ fun PaymentStatCard(title: String, amount: String, color: Color, modifier: Modif
 
 @Composable
 fun InvoiceItem(invoice: InvoiceDto, onClick: () -> Unit) {
-    val statusColor = if (invoice.isPaid) SuccessGreen else ErrorRed
-    val statusText = if (invoice.isPaid) "PAID" else "UNPAID"
+    val statusColor = if (invoice.paid) SuccessGreen else ErrorRed
+    val statusText = if (invoice.paid) "PAID" else "UNPAID"
     val dateFormat = SimpleDateFormat("dd MMM yyyy", LocalLocale.current.platformLocale)
 
     Card(
@@ -211,7 +209,7 @@ fun InvoiceItem(invoice: InvoiceDto, onClick: () -> Unit) {
                 }
             }
             
-            if (invoice.isPaid && invoice.paidAt != null) {
+            if (invoice.paid && invoice.paidAt != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider(modifier = Modifier.alpha(0.5f))
                 Spacer(modifier = Modifier.height(8.dp))

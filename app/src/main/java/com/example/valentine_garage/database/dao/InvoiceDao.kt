@@ -25,6 +25,9 @@ interface InvoiceDao {
     @Query("SELECT * FROM invoices WHERE isSynced = 0")
     suspend fun getUnsyncedInvoices(): List<InvoiceEntity>
 
+    @Query("SELECT COUNT(*) FROM invoices WHERE isSynced = 0")
+    suspend fun getUnsyncedCount(): Long
+
     @Query("UPDATE invoices SET isSynced = 1 WHERE id = :id")
     suspend fun markSynced(id: String)
 

@@ -7,7 +7,7 @@ data class InvoiceDto(
     val labourCost: Double = 0.0,
     val partsCost: Double = 0.0,
     val totalCost: Double = 0.0,
-    val isPaid: Boolean = false,
+    val paid: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val paidAt: Long? = null
 )

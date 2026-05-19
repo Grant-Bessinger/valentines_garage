@@ -45,14 +45,19 @@ class InvoiceRepository @Inject constructor(
 
     // --- Remote ManagerService Methods ---
 
-    suspend fun pushUnsyncedInvoices() {
+    suspend fun getUnsyncedCount(): Long = invoiceDao.getUnsyncedCount()
+
+    suspend fun pushUnsyncedInvoices(): Int {
         val unsynced = invoiceDao.getUnsyncedInvoices()
+        var count = 0
         unsynced.forEach { entity ->
             val result = managerService.saveInvoice(entity.toDto())
             if (result is FirebaseResult.Success) {
                 invoiceDao.markSynced(entity.id)
+                count++
             }
         }
+        return count
     }
 
     suspend fun syncRemoteInvoices() {

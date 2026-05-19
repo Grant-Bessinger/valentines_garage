@@ -1,6 +1,5 @@
 package com.example.valentine_garage.service
 
-import com.example.valentine_garage.database.entities.JobEntity
 import com.example.valentine_garage.dto.ClientDto
 import com.example.valentine_garage.dto.FinancialSummaryDto
 import com.example.valentine_garage.dto.InvoiceDto
@@ -150,7 +149,7 @@ class ManagerService @Inject constructor(
                 labourCost = labourCost,
                 partsCost = partsCost,
                 totalCost = labourCost + partsCost,
-                isPaid = false,
+                paid = false,
                 createdAt = System.currentTimeMillis()
             )
 
@@ -219,8 +218,8 @@ class ManagerService @Inject constructor(
             val snapshot = firestore.collection(INVOICES).get().await()
             val invoices = snapshot.toObjects(InvoiceDto::class.java)
 
-            val paid = invoices.filter { it.isPaid }
-            val unpaid = invoices.filter { !it.isPaid }
+            val paid = invoices.filter { it.paid }
+            val unpaid = invoices.filter { !it.paid }
 
             val summary = FinancialSummaryDto(
                 totalRevenue = paid.sumOf { it.totalCost },

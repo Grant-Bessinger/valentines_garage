@@ -25,7 +25,7 @@ data class InvoiceEntity(
         labourCost = labourCost,
         partsCost = partsCost,
         totalCost = totalCost,
-        isPaid = isPaid,
+        paid = isPaid,
         createdAt = createdAt,
         paidAt = paidAt
     )
@@ -38,7 +38,7 @@ data class InvoiceEntity(
             labourCost = dto.labourCost,
             partsCost = dto.partsCost,
             totalCost = dto.totalCost,
-            isPaid = dto.isPaid,
+            isPaid = dto.paid,
             createdAt = dto.createdAt,
             paidAt = dto.paidAt
         )
