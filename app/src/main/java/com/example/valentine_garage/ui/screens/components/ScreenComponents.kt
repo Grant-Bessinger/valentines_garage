@@ -1,6 +1,7 @@
 package com.example.valentine_garage.ui.screens.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +52,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.ui.platform.LocalLocale
+import com.example.valentine_garage.ui.screens.RepairDetails
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -209,14 +211,17 @@ fun RecentActivitySection(navController: NavHostController, jobs: List<JobDto>) 
         }
 
         jobs.take(5).forEach { job ->
-            JobCard(
-                vehicle = "Vehicle ID: ${job.vehicleId.takeLast(4)}",
-                mechanic = job.mechanicName,
-                work = job.conditionDescription,
-                isPending = job.status != JobStatus.COMPLETED.name,
-                date = dateFormat.format(Date(job.createdAt)),
-                invoiceAmount = null // Would need invoice matching logic
-            )
+
+            Box(Modifier.clickable{navController.navigate(RepairDetails.createRoute(job.id))}) {
+                JobCard(
+                    vehicle = "Vehicle ID: ${job.vehicleId.takeLast(4)}",
+                    mechanic = job.mechanicName,
+                    work = job.conditionDescription,
+                    isPending = job.status != JobStatus.COMPLETED.name,
+                    date = dateFormat.format(Date(job.createdAt)),
+                    invoiceAmount = null // Would need invoice matching logic
+                )
+            }
         }
     }
 }

@@ -182,7 +182,7 @@ fun ValentineGarageApp(authViewModel: AuthViewModel = hiltViewModel()) {
                     { invoiceId -> navController.navigate(InvoiceDetails.createRoute(invoiceId)) }) }
                     composable(CheckIn.route) { CheckInScreen() }
                     composable(Drafts.route) { DraftsScreen() }
-                    composable(Reports.route) { ReportsScreen() }
+                    composable(Reports.route) { ReportsScreen(navController) }
                     composable(Invoices.route) { InvoiceScreen() }
                     composable(Payments.route) { PaymentsScreen(navController) }
                     composable(RegisterEmployees.route) { RegisterEmployeeScreen() }

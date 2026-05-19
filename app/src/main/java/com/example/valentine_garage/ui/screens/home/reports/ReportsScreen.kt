@@ -1,5 +1,6 @@
 package com.example.valentine_garage.ui.screens.home.reports
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -20,9 +21,12 @@ import com.example.valentine_garage.ui.viewModels.JobViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.ui.platform.LocalLocale
+import androidx.navigation.NavController
+import com.example.valentine_garage.ui.screens.RepairDetails
 
 @Composable
 fun ReportsScreen(
+    navController: NavController,
     viewModel: JobViewModel = hiltViewModel()
 ) {
     LaunchedEffect(Unit) {
@@ -122,16 +126,18 @@ fun ReportsScreen(
         } else {
 
             recentJobs.forEach { job ->
+                Box(Modifier.clickable{navController.navigate(RepairDetails.createRoute(job.id))}) {
 
-                JobCard(
-                    vehicle = "Vehicle ID: ${job.vehicleId.takeLast(6)}",
-                    mechanic = job.mechanicName,
-                    work = job.conditionDescription,
-                    isPending = false,
-                    date = job.completedAt?.let {
-                        dateFormat.format(Date(it))
-                    } ?: dateFormat.format(Date(job.createdAt))
-                )
+                    JobCard(
+                        vehicle = "Vehicle ID: ${job.vehicleId.takeLast(6)}",
+                        mechanic = job.mechanicName,
+                        work = job.conditionDescription,
+                        isPending = false,
+                        date = job.completedAt?.let {
+                            dateFormat.format(Date(it))
+                        } ?: dateFormat.format(Date(job.createdAt))
+                    )
+                }
             }
         }
     }

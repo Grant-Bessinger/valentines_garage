@@ -95,7 +95,7 @@ fun RepairDetailsScreen(
                 val isAssignedMechanic = currentUser?.uid == currentJob.mechanicId
                 val isUnassigned = currentJob.mechanicId.isBlank() || currentJob.mechanicId == "Unassigned"
                 val isMechanic = currentUser?.role == "MECHANIC"
-                val isAdmin = currentUser?.role == "ADMIN" || currentUser?.role == "MANAGER"
+                val isAdmin = currentUser?.role == "ADMIN"
                 val allTasksDone = currentJob.tasks.isNotEmpty() && currentJob.tasks.all { it.completed }
 
                 Column(
