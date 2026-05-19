@@ -1,98 +1,143 @@
 package com.example.valentine_garage.ui.helper.sync
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.example.valentine_garage.database.dao.ClientDao
-import com.example.valentine_garage.database.dao.EmployeeDao
-import com.example.valentine_garage.database.dao.InvoiceDao
-import com.example.valentine_garage.database.dao.JobDao
-import com.example.valentine_garage.database.dao.VehicleDao
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.valentine_garage.ui.repositories.ClientRepository
+import com.example.valentine_garage.ui.repositories.JobRepository
+import com.example.valentine_garage.ui.repositories.VehicleRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.tasks.await
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.net.InetSocketAddress
+import java.net.Socket
 
 @HiltWorker
 class SyncWorker @AssistedInject constructor(
-    @Assisted context: Context,
-    @Assisted workerParams: WorkerParameters,
-    private val firestore: FirebaseFirestore,
-    private val clientDao: ClientDao,
-    private val vehicleDao: VehicleDao,
-    private val jobDao: JobDao,
-    private val invoiceDao: InvoiceDao
-) : CoroutineWorker(context, workerParams) {
+    @Assisted private val context: Context,
+    @Assisted params: WorkerParameters,
+    private val clientRepository: ClientRepository,
+    private val jobRepository: JobRepository,
+    private val vehicleRepository: VehicleRepository,
+    private val notificationHelper: NotificationHelper
+) : CoroutineWorker(context, params) {
 
     companion object {
-        private const val CLIENTS   = "clients"
-        private const val VEHICLES  = "vehicles"
-        private const val JOBS      = "jobs"
-        private const val INVOICES  = "invoices"
-
         const val TAG = "valentine_sync_worker"
+        private const val PING_HOST = "8.8.8.8"
+        private const val PING_PORT = 53
+        private const val PING_TIMEOUT_MS = 3_000
+        private const val MAX_ATTEMPTS = 3
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun doWork(): Result {
+        val totalPending = jobRepository.getUnsyncedCount()
+
+        if (totalPending == 0L) {
+            Log.d(TAG, "Nothing to sync, exiting early")
+            notificationHelper.dismissUnsyncedNotification()
+            return Result.success()
+        }
+
+        notify { notificationHelper.notifyPending(totalPending) }
+
+        if (!isNetworkAvailable()) {
+            Log.d(TAG, "No network available, scheduling retry")
+            notify { notificationHelper.notifyNoInternet() }
+            return Result.retry()
+        }
+
+        if (!isInternetReachable()) {
+            Log.d(TAG, "Internet unreachable, scheduling retry")
+            notify { notificationHelper.notifyNoInternet() }
+            return Result.retry()
+        }
+
         return try {
-            syncClients()
-            syncVehicles()
-            syncJobs()
-            syncInvoices()
+            var totalSynced = 0
+
+            notify { notificationHelper.notifyProgress("Uploading clients…") }
+            totalSynced += clientRepository.pushUnsyncedClients()
+
+            notify { notificationHelper.notifyProgress("Uploading vehicles…") }
+            totalSynced += vehicleRepository.pushUnsyncedVehicles()
+
+            notify { notificationHelper.notifyProgress("Uploading jobs…") }
+            totalSynced += jobRepository.pushUnsyncedJobs()
+
+            notify { notificationHelper.notifyProgress("Pulling latest data…") }
+            clientRepository.syncRemoteClients()
+            vehicleRepository.syncRemoteVehicles()
+            jobRepository.syncRemoteJobs()
+
+            Log.d(TAG, "Sync complete — $totalSynced record(s) uploaded")
+            notify { notificationHelper.notifySuccess(totalSynced) }
+            // Everything is uploaded — dismiss the unsynced reminder
+            notificationHelper.dismissUnsyncedNotification()
             Result.success()
+
         } catch (e: Exception) {
-            if (runAttemptCount < 3) Result.retry() else Result.failure()
+            Log.e(TAG, "Sync failed on attempt $runAttemptCount", e)
+            val message = e.localizedMessage ?: "Unknown error"
+
+            if (runAttemptCount >= MAX_ATTEMPTS) {
+                notify { notificationHelper.notifyFailure("Sync failed after $MAX_ATTEMPTS attempts: $message") }
+                Result.failure()
+            } else {
+                notify { notificationHelper.notifyFailure("Sync failed, retrying… ($message)") }
+                Result.retry()
+            }
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Private sync helpers
-    // -------------------------------------------------------------------------
+    private fun isNetworkAvailable(): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = cm.activeNetwork ?: return false
+        val caps = cm.getNetworkCapabilities(network) ?: return false
+        return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
 
-    private suspend fun syncClients() {
-        val unsynced = clientDao.getUnsyncedClients()
-        unsynced.forEach { entity ->
-            firestore.collection(CLIENTS)
-                .document(entity.id)
-                .set(entity.toDto())
-                .await()
-            clientDao.markSynced(entity.id)
+    private suspend fun isInternetReachable(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            Socket().use { socket ->
+                socket.connect(InetSocketAddress(PING_HOST, PING_PORT), PING_TIMEOUT_MS)
+                true
+            }
+        } catch (e: IOException) {
+            false
         }
     }
 
-
-    private suspend fun syncVehicles() {
-        val unsynced = vehicleDao.getUnsyncedVehicles()
-        unsynced.forEach { entity ->
-            firestore.collection(VEHICLES)
-                .document(entity.id)
-                .set(entity.toDto())
-                .await()
-            vehicleDao.markSynced(entity.id)
+    private fun notify(block: () -> Unit) {
+        if (!hasNotificationPermission()) return
+        try {
+            block()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to post notification", e)
         }
     }
 
-    private suspend fun syncJobs() {
-        val unsynced = jobDao.getUnsyncedJobs()
-        unsynced.forEach { entity ->
-            firestore.collection(JOBS)
-                .document(entity.id)
-                .set(entity.toDto())
-                .await()
-            jobDao.markSynced(entity.id)
-        }
-    }
-
-    private suspend fun syncInvoices() {
-        val unsynced = invoiceDao.getUnsyncedInvoices()
-        unsynced.forEach { entity ->
-            firestore.collection(INVOICES)
-                .document(entity.id)
-                .set(entity.toDto())
-                .await()
-            invoiceDao.markSynced(entity.id)
+    private fun hasNotificationPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
         }
     }
 }

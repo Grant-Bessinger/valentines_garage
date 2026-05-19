@@ -25,6 +25,9 @@ interface JobDao {
     @Query("SELECT * FROM jobs WHERE isSynced = 0")
     suspend fun getUnsyncedJobs(): List<JobEntity>
 
+    @Query("SELECT COUNT(*) FROM jobs WHERE isSynced = 0")
+    suspend fun getUnsyncedCount(): Long
+
     @Query("UPDATE jobs SET isSynced = 1 WHERE id = :id")
     suspend fun markSynced(id: String)
 

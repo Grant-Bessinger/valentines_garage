@@ -1,8 +1,13 @@
 package com.example.valentine_garage.ui.screens.home
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
@@ -20,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -28,6 +34,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.work.WorkInfo
 import com.example.valentine_garage.ui.enums.UserRole
 import com.example.valentine_garage.ui.viewModels.AuthViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -36,6 +43,7 @@ import com.example.valentine_garage.ui.screens.CompletedJobs
 import com.example.valentine_garage.ui.screens.Drafts
 import com.example.valentine_garage.ui.screens.History
 import com.example.valentine_garage.ui.screens.Home
+import com.example.valentine_garage.ui.screens.InvoiceDetails
 import com.example.valentine_garage.ui.screens.Invoices
 import com.example.valentine_garage.ui.screens.JobDetailsScreen
 import com.example.valentine_garage.ui.screens.Payments
@@ -53,6 +61,7 @@ import com.example.valentine_garage.ui.screens.home.admin.RegisterEmployeeScreen
 import com.example.valentine_garage.ui.screens.home.checkIn.CheckInScreen
 import com.example.valentine_garage.ui.screens.home.drafts.DraftsScreen
 import com.example.valentine_garage.ui.screens.home.history.HistoryScreen
+import com.example.valentine_garage.ui.screens.home.invoices.InvoiceDetailScreen
 import com.example.valentine_garage.ui.screens.home.invoices.InvoiceScreen
 import com.example.valentine_garage.ui.screens.home.invoices.UnpaidInvoicesScreen
 import com.example.valentine_garage.ui.screens.home.payments.PaymentsScreen
@@ -71,10 +80,27 @@ class HomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        checkNotificationPermission()
+
         setContent {
             ValentineGarageApp()
         }
     }
+
+    private fun checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    private val notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (!isGranted) {
+            Log.e("NotificationPermission", "Notification permission denied")
+        }
+    }
+
 }
 
 @Composable
@@ -83,8 +109,8 @@ fun ValentineGarageApp(authViewModel: AuthViewModel = hiltViewModel()) {
         val navController = rememberNavController()
         val currentBackStack by navController.currentBackStackEntryAsState()
         val currentDestination = currentBackStack?.destination
-
         val currentUser by authViewModel.currentUser.collectAsState()
+
         currentUser?.let { user ->
             val navConfig = getNavConfig(user)
             val bottomBarRoutes = (navConfig.primaryItems + navConfig.overflowItems)
@@ -152,7 +178,8 @@ fun ValentineGarageApp(authViewModel: AuthViewModel = hiltViewModel()) {
                     composable(Home.route) { HomeScreen(navController, user) }
                     composable(Profile.route) { ProfileScreen() }
                     composable(History.route) { HistoryScreen(user,
-                        { jobId -> navController.navigate(JobDetailsScreen.createRoute(jobId)) }) }
+                        { jobId -> navController.navigate(JobDetailsScreen.createRoute(jobId)) },
+                    { invoiceId -> navController.navigate(InvoiceDetails.createRoute(invoiceId)) }) }
                     composable(CheckIn.route) { CheckInScreen() }
                     composable(Drafts.route) { DraftsScreen() }
                     composable(Reports.route) { ReportsScreen() }
@@ -171,9 +198,15 @@ fun ValentineGarageApp(authViewModel: AuthViewModel = hiltViewModel()) {
                     composable(PendingJobs.route) { PendingJobsScreen(navController) }
                     composable(RevenueDetails.route) { RevenueDetailsScreen(navController) }
                     composable(UnpaidInvoices.route) { UnpaidInvoicesScreen(navController) }
+
                     composable(JobDetailsScreen.route) { backStackEntry ->
                         val jobId = backStackEntry.arguments?.getString("jobId") ?: ""
                         JobDetailsScreen(jobId,  navController)
+                    }
+
+                    composable(InvoiceDetails.route) { backStackEntry ->
+                        val invoiceId = backStackEntry.arguments?.getString("invoiceId") ?: ""
+                        InvoiceDetailScreen(invoiceId, navController)
                     }
 
                     composable(RepairDetails.route) { backStackEntry ->

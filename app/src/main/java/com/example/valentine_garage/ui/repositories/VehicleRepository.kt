@@ -38,7 +38,18 @@ class VehicleRepository @Inject constructor(
         vehicleDao.deleteVehicle(VehicleEntity.fromDto(vehicleDto))
     }
 
-    // --- Remote ManagerService Methods ---
+    suspend fun pushUnsyncedVehicles(): Int  {
+        val unsynced = vehicleDao.getUnsyncedVehicles()
+        var count = 0
+        unsynced.forEach { entity ->
+            val result = managerService.saveVehicle(entity.toDto())
+            if (result is FirebaseResult.Success) {
+                vehicleDao.markSynced(entity.id)
+                count++
+            }
+        }
+        return count
+    }
 
     suspend fun syncRemoteVehicles() {
         val result = managerService.getAllVehicles()

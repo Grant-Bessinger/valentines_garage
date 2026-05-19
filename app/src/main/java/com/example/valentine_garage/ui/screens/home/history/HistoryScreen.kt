@@ -135,12 +135,14 @@ fun HistoryScreen(
                         EmptyHistoryPlaceholder("No invoices recorded yet.")
                     } else {
                         invoices.forEach { invoice ->
-                            HistoryInvoiceItem(
-                                id = invoice.id.takeLast(6).uppercase(),
-                                amount = "N$ %,.2f".format(invoice.totalCost),
-                                date = dateFormat.format(Date(invoice.createdAt)),
-                                isPaid = invoice.isPaid
-                            )
+                            Box(Modifier.clickable { onInvoiceClicked(invoice.id) }) {
+                                HistoryInvoiceItem(
+                                    id = invoice.id.takeLast(6).uppercase(),
+                                    amount = "N$ %,.2f".format(invoice.totalCost),
+                                    date = dateFormat.format(Date(invoice.createdAt)),
+                                    isPaid = invoice.isPaid
+                                )
+                            }
                         }
                     }
                 }

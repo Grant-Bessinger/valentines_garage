@@ -4,6 +4,7 @@ import com.example.valentine_garage.database.dao.ClientDao
 import com.example.valentine_garage.database.entities.ClientEntity
 import com.example.valentine_garage.dto.ClientDto
 import com.example.valentine_garage.service.ManagerService
+import com.example.valentine_garage.service.helper.FirebaseResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -31,7 +32,20 @@ class ClientRepository @Inject constructor(
         clientDao.deleteClient(ClientEntity.fromDto(clientDto))
     }
 
-    // --- Remote ManagerService Methods ---
+
+
+    suspend fun pushUnsyncedClients(): Int {
+        val unsynced = clientDao.getUnsyncedClients()
+        var count = 0
+        unsynced.forEach { entity ->
+            val result = managerService.saveClient(entity.toDto())
+            if (result is FirebaseResult.Success) {
+                clientDao.markSynced(entity.id)
+                count++
+            }
+        }
+        return count
+    }
 
     suspend fun syncRemoteClients() {
         val result = managerService.getAllClients()

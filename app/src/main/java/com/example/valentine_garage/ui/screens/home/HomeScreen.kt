@@ -88,7 +88,7 @@ fun HomeScreen(
 
         when (userRole) {
 
-            UserRole.ADMIN -> AdminHomeContent(navController, clientViewModel, vehicleViewModel, jobViewModel, user)
+            UserRole.ADMIN -> AdminHomeContent(navController, clientViewModel, vehicleViewModel, jobViewModel, invoiceViewModel, user)
 
             UserRole.MECHANIC -> MechanicHomeContent(navController, jobViewModel, user)
 
@@ -104,16 +104,19 @@ fun AdminHomeContent(
     clientViewModel: ClientViewModel,
     vehicleViewModel: VehicleViewModel,
     jobViewModel: JobViewModel,
+    invoiceViewModel: InvoiceViewModel,
     user: UserDto
 ) {
     val allClients by clientViewModel.allClients.collectAsState()
     val allVehicles by vehicleViewModel.allVehicles.collectAsState()
     val allJobs by jobViewModel.allJobs.collectAsState()
 
+
     LaunchedEffect(Unit) {
         clientViewModel.fetchRemoteClients()
         vehicleViewModel.fetchRemoteVehicles()
         jobViewModel.fetchRemoteJobs()
+        invoiceViewModel.fetchRemoteInvoices()
     }
 
     Text(
@@ -271,6 +274,7 @@ fun ManagerHomeContent(
         jobViewModel.fetchRemoteJobs()
         jobViewModel.fetchMechanicPerformance()
         invoiceViewModel.fetchFinancialSummary()
+        invoiceViewModel.fetchRemoteInvoices()
     }
 
     val completedJobsCount = allJobs.count { it.status == JobStatus.COMPLETED.name }
@@ -389,6 +393,7 @@ fun ManagerHomeContent(
             iconTint = InfoBlue,
             subtitle = "Total Revenue"
         ) { navController.navigate("revenue_details") }
+
 
         StatCard(
             title    = "Unpaid",

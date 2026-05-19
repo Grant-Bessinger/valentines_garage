@@ -43,23 +43,37 @@ class ManagerService @Inject constructor(
         }
     }
 
-    suspend fun createJob(
-        job: JobDto
-    ): FirebaseResult<JobDto> {
+    suspend fun saveJob(job: JobDto): FirebaseResult<Unit> {
         return try {
+            firestore.collection(JOBS).document(job.id).set(job).await()
+            FirebaseResult.Success(Unit)
+        } catch (e: Exception) {
+            FirebaseResult.Failure(e)
+        }
+    }
 
-            val existing = firestore.collection(INVOICES)
-                .whereEqualTo("jobId", job.id)
-                .get()
-                .await()
+    suspend fun saveClient(client: ClientDto): FirebaseResult<Unit> {
+        return try {
+            firestore.collection(CLIENTS).document(client.id).set(client).await()
+            FirebaseResult.Success(Unit)
+        } catch (e: Exception) {
+            FirebaseResult.Failure(e)
+        }
+    }
 
-            if (!existing.isEmpty) {
-                val existingJob = existing.toObjects(JobDto::class.java).first()
-                return FirebaseResult.Success(existingJob)
-            }
+    suspend fun saveVehicle(vehicle: VehicleDto): FirebaseResult<Unit> {
+        return try {
+            firestore.collection(VEHICLES).document(vehicle.id).set(vehicle).await()
+            FirebaseResult.Success(Unit)
+        } catch (e: Exception) {
+            FirebaseResult.Failure(e)
+        }
+    }
 
-            firestore.collection(INVOICES).document(job.id).set(job).await()
-            FirebaseResult.Success(job)
+    suspend fun saveInvoice(invoice: InvoiceDto): FirebaseResult<Unit> {
+        return try {
+            firestore.collection(INVOICES).document(invoice.id).set(invoice).await()
+            FirebaseResult.Success(Unit)
         } catch (e: Exception) {
             FirebaseResult.Failure(e)
         }
@@ -209,7 +223,7 @@ class ManagerService @Inject constructor(
             val unpaid = invoices.filter { !it.isPaid }
 
             val summary = FinancialSummaryDto(
-                totalRevenue = invoices.sumOf { it.totalCost },
+                totalRevenue = paid.sumOf { it.totalCost },
                 paidAmount = paid.sumOf { it.totalCost },
                 unpaidAmount = unpaid.sumOf { it.totalCost },
                 totalInvoices = invoices.size,

@@ -44,7 +44,20 @@ class JobRepository @Inject constructor(
         jobDao.deleteJob(JobEntity.fromDto(jobDto))
     }
 
-    // --- Remote ManagerService Methods ---
+    suspend fun getUnsyncedCount(): Long = jobDao.getUnsyncedCount()
+
+    suspend fun pushUnsyncedJobs(): Int {
+        val unsynced = jobDao.getUnsyncedJobs()
+        var count = 0
+        unsynced.forEach { entity ->
+            val result = managerService.saveJob(entity.toDto())
+            if (result is FirebaseResult.Success) {
+                jobDao.markSynced(entity.id)
+                count++
+            }
+        }
+        return count
+    }
 
     suspend fun syncRemoteJobs() {
         val result = managerService.getAllJobs()
