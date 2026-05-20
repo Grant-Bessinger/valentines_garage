@@ -92,7 +92,7 @@ fun HomeScreen(
 
             UserRole.MECHANIC -> MechanicHomeContent(navController, jobViewModel, user)
 
-            UserRole.MANAGER -> ManagerHomeContent(navController, jobViewModel, invoiceViewModel, user)
+            UserRole.MANAGER -> ManagerHomeContent(navController, jobViewModel, invoiceViewModel, user, clientViewModel, vehicleViewModel)
             else -> null
         }
     }
@@ -262,7 +262,9 @@ fun ManagerHomeContent(
     navController: NavHostController,
     jobViewModel: JobViewModel,
     invoiceViewModel: InvoiceViewModel,
-    user: UserDto
+    user: UserDto,
+    clientViewModel: ClientViewModel,
+    vehicleViewModel: VehicleViewModel
 ) {
 
     val allJobs by jobViewModel.allJobs.collectAsState()
@@ -271,6 +273,8 @@ fun ManagerHomeContent(
     val unpaidInvoices by invoiceViewModel.unpaidInvoices.collectAsState()
 
     LaunchedEffect(Unit) {
+        clientViewModel.fetchRemoteClients()
+        vehicleViewModel.fetchRemoteVehicles()
         jobViewModel.fetchRemoteJobs()
         jobViewModel.fetchMechanicPerformance()
         invoiceViewModel.fetchFinancialSummary()
